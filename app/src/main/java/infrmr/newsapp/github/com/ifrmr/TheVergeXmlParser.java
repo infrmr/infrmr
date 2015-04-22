@@ -1,7 +1,6 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 
-
 import android.util.Log;
 import android.util.Xml;
 
@@ -54,7 +53,7 @@ public class TheVergeXmlParser {
     }
 
     // This class represents a single entry (post) in the XML feed.
-    // It includes the data members "title," "link,"
+    // It includes the data members "title," "link," "content,"
     public static class Entry {
         public final String title;
         public final String link;
@@ -80,21 +79,23 @@ public class TheVergeXmlParser {
         // todo published
         String content = null;
         while (parser.next() != XmlPullParser.END_TAG) {
-
             if (parser.getEventType() != XmlPullParser.START_TAG) {
                 continue;
             }
-
             String name = parser.getName();
-            if (name.equals("title")) {
-                title = readTitle(parser);
-            } else if (name.equals("link")) {
-                link = readLink(parser);
+            switch (name) {
+                case ("title"):
+                    title = readTitle(parser);
+                    break;
+                case ("link"):
+                    link = readLink(parser);
+                    break;
                 // todo --V
-            } else if (name.equals("content")) {
-                content = readContent(parser);
-            } else {
-                skip(parser);
+                case ("content"):
+                    content = readContent(parser);
+                    break;
+                default:
+                    skip(parser);
             }
         }
         return new Entry(title, link, content);
@@ -127,12 +128,12 @@ public class TheVergeXmlParser {
         if (tag.equals("link")) {
             if (relType.equals("alternate")) {
                 link = parser.getAttributeValue(null, "href");
-                Log.d(getClass().getSimpleName(), "link: " + link.toString());
+                Log.d(getClass().getSimpleName(), "link: " + link);
                 parser.nextTag();
             } else if (relType.equals("enclosure")) { // todo: vid link - remove
                 Log.e(getClass().getSimpleName(), "Video enclosure link");
                 link = parser.getAttributeValue(null, "href");
-                Log.d(getClass().getSimpleName(), "link: " + link.toString());
+                Log.d(getClass().getSimpleName(), "link: " + link);
                 parser.nextTag();
                 return link;
             }
