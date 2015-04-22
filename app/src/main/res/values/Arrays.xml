@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string-array name="listArray">
+        <item>Only when on Wi-Fi</item>
+        <item>On any network</item>
+    </string-array>
+    <string-array name="listValues">
+        <item>Wi-Fi</item>
+        <item>Any</item>
+    </string-array>
+</resources>
