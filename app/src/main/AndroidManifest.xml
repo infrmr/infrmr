@@ -23,7 +23,7 @@
 
         <!-- Settings Activity -->
         <activity
-            android:label="SettingsActivity"
+            android:label="@string/settings_title"
             android:name=".SettingsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MANAGE_NETWORK_USAGE" />
