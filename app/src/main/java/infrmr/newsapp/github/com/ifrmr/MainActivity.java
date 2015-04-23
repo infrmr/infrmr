@@ -223,25 +223,27 @@ public class MainActivity extends ActionBarActivity {
         // Each entry is displayed in the UI as a link that optionally includes
         // a text summary.
         if (null != entries) {
-            Log.d(getClass().getSimpleName(), "ENTRIES COUNT: " + entries.size());
-        }
-        for (TheVergeXmlParser.Entry entry : entries) {
-            htmlString.append("<p><a href='");
-            htmlString.append(entry.link);
 
-            // if showing content of post, increase text size.
-            if (pref) {
-                htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-            } else {
-                htmlString.append("'>" + entry.title + "</a></p>");
-            }
+            for (TheVergeXmlParser.Entry entry : entries) {
+                htmlString.append("<p><a href='");
+                htmlString.append(entry.link);
 
-            //htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-            // If the user set the preference to include summary text,
-            // adds it to the display.
-            if (pref) {
-                htmlString.append(entry.content + "<br><br>");
+                // if showing content of post, increase text size.
+                if (pref) {
+                    htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
+                } else {
+                    htmlString.append("'>" + entry.title + "</a></p>");
+                }
+
+                //htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
+                // If the user set the preference to include summary text,
+                // adds it to the display.
+                if (pref) {
+                    htmlString.append(entry.content + "<br><br>");
+                }
             }
+        } else {
+            htmlString.append("No entries loaded, possible network timeout");
         }
         return htmlString.toString();
     }
@@ -257,8 +259,7 @@ public class MainActivity extends ActionBarActivity {
         conn.setDoInput(true);
         // Starts the query
         conn.connect();
-        InputStream stream = conn.getInputStream();
-        return stream;
+        return conn.getInputStream();
     }
 
     /**

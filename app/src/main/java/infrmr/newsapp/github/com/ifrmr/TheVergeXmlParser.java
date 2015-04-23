@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class parses XML feeds from stackoverflow.com.
+ * This class parses XML feeds from The Verge.
  * Given an InputStream representation of a feed, it returns a List of entries,
  * where each list element represents a single entry (post) in the XML feed.
  */
@@ -57,14 +57,12 @@ public class TheVergeXmlParser {
     public static class Entry {
         public final String title;
         public final String link;
-        // todo
         public final String content;
 
 
         private Entry(String title, String link, String content) {
             this.title = title;
             this.link = link;
-            // todo
             this.content = content;
         }
     }
@@ -76,7 +74,6 @@ public class TheVergeXmlParser {
         parser.require(XmlPullParser.START_TAG, ns, "entry");
         String title = null;
         String link = null;
-        // todo published
         String content = null;
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.getEventType() != XmlPullParser.START_TAG) {
@@ -90,7 +87,6 @@ public class TheVergeXmlParser {
                 case ("link"):
                     link = readLink(parser);
                     break;
-                // todo --V
                 case ("content"):
                     content = readContent(parser);
                     break;
@@ -109,13 +105,11 @@ public class TheVergeXmlParser {
         return title;
     }
 
-    // todo published reader
     // Processes title tags in the feed.
     private String readContent(XmlPullParser parser) throws IOException, XmlPullParserException {
         parser.require(XmlPullParser.START_TAG, ns, "content");
         String content = readText(parser);
         parser.require(XmlPullParser.END_TAG, ns, "content");
-        // Log.i(getClass().getSimpleName(), "content: " + content);
         return content;
     }
 
@@ -128,12 +122,11 @@ public class TheVergeXmlParser {
         if (tag.equals("link")) {
             if (relType.equals("alternate")) {
                 link = parser.getAttributeValue(null, "href");
-                Log.d(getClass().getSimpleName(), "link: " + link);
+                Log.d(getClass().getSimpleName(), "Url link: " + link);
                 parser.nextTag();
-            } else if (relType.equals("enclosure")) { // todo: vid link - remove
-                Log.e(getClass().getSimpleName(), "Video enclosure link");
+            } else if (relType.equals("enclosure")) { // TODO - Prevent link tag object creation for video link
                 link = parser.getAttributeValue(null, "href");
-                Log.d(getClass().getSimpleName(), "link: " + link);
+                Log.d(getClass().getSimpleName(), "Video link: " + link);
                 parser.nextTag();
                 return link;
             }
