@@ -189,8 +189,8 @@ public class MainActivity extends ActionBarActivity {
     // HTML markup. Returns HTML string.
     private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
-        StackOverflowXmlParser stackOverflowXmlParser = new StackOverflowXmlParser();
-        List<StackOverflowXmlParser.Entry> entries = null;
+        TheVergeXmlParser vergeXmlParser = new TheVergeXmlParser();
+        List<TheVergeXmlParser.Entry> entries = null;
         String title = null;
         String url = null;
         String summary = null;
@@ -207,7 +207,7 @@ public class MainActivity extends ActionBarActivity {
                 formatter.format(rightNow.getTime()) + "</em>");
         try {
             stream = downloadUrl(urlString);
-            entries = stackOverflowXmlParser.parse(stream);
+            entries = vergeXmlParser.parse(stream);
             // Makes sure that the InputStream is closed after the app is
             // finished using it.
         } catch (Exception e) {
@@ -225,7 +225,7 @@ public class MainActivity extends ActionBarActivity {
         if (null != entries) {
             Log.d(getClass().getSimpleName(), "ENTRIES COUNT: " + entries.size());
         }
-        for (StackOverflowXmlParser.Entry entry : entries) {
+        for (TheVergeXmlParser.Entry entry : entries) {
             htmlString.append("<p><a href='");
             htmlString.append(entry.link);
 
