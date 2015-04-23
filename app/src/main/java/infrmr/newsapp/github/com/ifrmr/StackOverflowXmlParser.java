@@ -114,7 +114,6 @@ public class StackOverflowXmlParser {
         return title;
     }
 
-    // todo published reader
     // Processes title tags in the feed.
     private String readContent(XmlPullParser parser) throws IOException, XmlPullParserException {
         parser.require(XmlPullParser.START_TAG, ns, "content");
