@@ -9,6 +9,21 @@
     <string name="connection_error">Unable to load content. Check your network connection.</string>
     <string name="xml_error">Error parsing XML.</string>
     <string name="preference_category_network">Network</string>
-    <string name="preference_category_display">Display</string>
+    <string name="preference_category_display">News Feed</string>
     <string name="settings_title">Settings</string>
+
+    <!-- Rss Feed Urls -->
+    <string name="url_android">http://www.theverge.com/android/rss/index.xml</string>
+    <string name="url_apple">http://www.theverge.com/apple/rss/index.xml</string>
+    <string name="url_apps_software">http://www.theverge.com/apps/rss/index.xml</string>
+    <string name="url_blackberry">http://www.theverge.com/blackberry/rss/index.xml</string>
+    <string name="url_culture">http://www.theverge.com/culture/rss/index.xml</string>
+    <string name="url_features">http://www.theverge.com/rss/group/features/index.xml</string>
+    <string name="url_gaming">http://www.theverge.com/gaming/rss/index.xml</string>
+    <string name="url_hd_home">http://www.theverge.com/hd/rss/index.xml</string>
+    <string name="url_microsoft">http://www.theverge.com/microsoft/rss/index.xml</string>
+    <string name="url_mobile">http://www.theverge.com/mobile/rss/index.xml</string>
+    <string name="url_photography_video">http://www.theverge.com/photography/rss/index.xml</string>
+    <string name="url_policy_law">http://www.theverge.com/policy/rss/index.xml</string>
+    <string name="url_web_social">http://www.theverge.com/web/rss/index.xml</string>
 </resources>
