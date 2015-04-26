@@ -1,5 +1,4 @@
-package infrmr.newsapp.github.com.ifrmr;
-
+package com.infrmr.newsapp;
 
 import android.util.Log;
 import android.util.Xml;
