@@ -1,12 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <string-array name="listArray">
+    <!--Arrays for network setting -->
+    <string-array name="listArrayNetwork">
         <item>Only when on Wi-Fi</item>
         <item>On any network</item>
     </string-array>
-    <string-array name="listValues">
+    <string-array name="listValuesNetwork">
         <item>Wi-Fi</item>
         <item>Any</item>
+    </string-array>
+    <!--Arrays for news feed topic setting -->
+    <string-array name="listArrayTopic">
+        <item>Android</item>
+        <item>Apple</item>
+        <item>Apps &amp; Software</item>
+        <item>Blackberry</item>
+        <item>Culture</item>
+        <item>Features</item>
+        <item>Gaming</item>
+        <item>HD &amp; Home</item>
+        <item>Microsoft</item>
+        <item>Mobile</item>
+        <item>Photography &amp; Video</item>
+        <item>Policy &amp; Law</item>
+        <item>Web * Social</item>
+    </string-array>
+    <string-array name="listValuesTopic">
+        <item>http://www.theverge.com/android/rss/index.xml</item>
+        <item>http://www.theverge.com/apple/rss/index.xml</item>
+        <item>http://www.theverge.com/apps/rss/index.xml</item>
+        <item>http://www.theverge.com/blackberry/rss/index.xml</item>
+        <item>http://www.theverge.com/culture/rss/index.xml</item>
+        <item>http://www.theverge.com/rss/group/features/index.xml</item>
+        <item>http://www.theverge.com/gaming/rss/index.xml</item>
+        <item>http://www.theverge.com/hd/rss/index.xml</item>
+        <item>http://www.theverge.com/microsoft/rss/index.xml</item>
+        <item>http://www.theverge.com/mobile/rss/index.xml</item>
+        <item>http://www.theverge.com/photography/rss/index.xml</item>
+        <item>http://www.theverge.com/policy/rss/index.xml</item>
+        <item>http://www.theverge.com/web/rss/index.xml</item>
     </string-array>
 </resources>

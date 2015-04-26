@@ -9,7 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -29,13 +29,15 @@ import java.util.Calendar;
 import java.util.List;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
+    // Tag for debugging
+    public String TAG = getClass().getSimpleName();
     // For checking user network connection preference
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
-    // Rss feed url that we would like to parse
-    private static final String URL = "http://www.theverge.com/android/rss/index.xml";
+    // Default RSS Feed before loading from preference
+    private static String URL = "http://www.theverge.com/android/rss/index.xml";
 
     // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
@@ -77,6 +79,10 @@ public class MainActivity extends ActionBarActivity {
         // is the default value to use if a preference value is not found.
         sPref = sharedPrefs.getString("listPref", "Wi-Fi");
 
+        // Retrieves the users preference for news topic
+        URL = sharedPrefs.getString("topicPref", "http://www.theverge.com/android/rss/index.xml");
+
+        // CHeck internet connection
         updateConnectedFlags();
 
         // Only loads the page if refreshDisplay is true. Otherwise, keeps previous
@@ -124,6 +130,7 @@ public class MainActivity extends ActionBarActivity {
             new DownloadXmlTask().execute(URL);
         } else {
             showErrorPage();
+            Log.d(TAG, "Error - Internet Connection");
         }
     }
 
@@ -189,7 +196,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-    // Uploads XML from stackoverflow.com, parses it, and combines it with
+    // Uploads XML from TheVerge.com, parses it, and combines it with
     // HTML markup. Returns HTML string.
     private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
