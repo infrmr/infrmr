@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/preference_category_display">
+        <ListPreference
+            android:title="News Category"
+            android:summary="The news topic would you like to view."
+            android:key="topicPref"
+            android:defaultValue="http://www.theverge.com/android/rss/index.xml"
+            android:entries="@array/listArrayTopic"
+            android:entryValues="@array/listValuesTopic" />
         <CheckBoxPreference
             android:title="Show Summaries"
             android:defaultValue="false"
@@ -13,7 +20,7 @@
             android:summary="Network connectivity required to download the feed."
             android:key="listPref"
             android:defaultValue="Any"
-            android:entries="@array/listArray"
-            android:entryValues="@array/listValues" />
+            android:entries="@array/listArrayNetwork"
+            android:entryValues="@array/listValuesNetwork" />
     </PreferenceCategory>
 </PreferenceScreen>
