@@ -5,7 +5,7 @@ android {
     buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "infrmr.newsapp.github.com.ifrmr"
+        applicationId "com.infrmr.newsapp"
         minSdkVersion 15
         targetSdkVersion 22
         versionCode 1

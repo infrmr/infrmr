@@ -1,4 +1,4 @@
-package infrmr.newsapp.github.com.ifrmr;
+package com.infrmr.newsapp;
 
 
 import android.content.SharedPreferences;
