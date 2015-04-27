@@ -1,11 +1,19 @@
-<android.support.v4.widget.DrawerLayout android:id="@+id/drawer_layout"
-                                        xmlns:android="http://schemas.android.com/apk/res/android"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="match_parent">
+<android.support.v4.widget.DrawerLayout
+	android:id="@+id/drawer_layout"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/lib/com.google.app"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
 	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	              android:layout_width="match_parent"
 	              android:layout_height="match_parent"
-	              android:orientation="vertical">
+	              android:orientation="vertical"
+	              tools:context="infrmr.newsapp.github.com.ifrmr.MainActivity">
+
+		<include android:id="@+id/toolbar"
+		         layout="@layout/toolbar"/>
 
 		<LinearLayout
 			android:id="@+id/container_app_bar"
@@ -13,16 +21,19 @@
 			android:layout_height="match_parent"
 			android:orientation="vertical">
 
-
-			<include android:id="@+id/toolbar"
-			         layout="@layout/toolbar"/>
-
 			<WebView android:id="@+id/webview"
 			         xmlns:android="http://schemas.android.com/apk/res/android"
-			         android:layout_width="fill_parent"
-			         android:layout_height="fill_parent"
-			         android:layout_below="@+id/toolbar"/>
+			         android:layout_width="match_parent"
+			         android:layout_height="wrap_content"/>
 
 		</LinearLayout>
 	</LinearLayout>
+	<fragment
+		android:id="@+id/navigation_drawer"
+		android:name="infrmr.newsapp.github.com.ifrmr.DrawerFragment"
+		android:layout_width="280dp"
+		android:layout_height="match_parent"
+		android:layout_gravity="start"
+		app:layout="@layout/fragment_navigation_drawer"
+		tools:layout="@layout/fragment_navigation_drawer"/>
 </android.support.v4.widget.DrawerLayout>

@@ -1,14 +1,19 @@
 <resources>
-    <string name="app_name">Infrmr</string>
-    <string name="action_settings">Settings</string>
-    <string name="action_refresh">Refresh</string>
-    <string name="page_title">The Verge Articles - Android</string>
-    <string name="updated">Last updated:</string>
-    <string name="lost_connection">Lost connection.</string>
-    <string name="wifi_connected">Wi-Fi reconnected.</string>
-    <string name="connection_error">Unable to load content. Check your network connection.</string>
-    <string name="xml_error">Error parsing XML.</string>
-    <string name="preference_category_network">Network</string>
-    <string name="preference_category_display">News Feed</string>
-    <string name="settings_title">Settings</string>
+	<string name="app_name">Infrmr</string>
+	<string name="action_settings">Settings</string>
+	<string name="action_refresh">Refresh</string>
+	<string name="page_title">The Verge Articles - Android</string>
+	<string name="updated">Last updated:</string>
+	<string name="lost_connection">Lost connection.</string>
+	<string name="wifi_connected">Wi-Fi reconnected.</string>
+	<string name="connection_error">Unable to load content. Check your network connection.</string>
+	<string name="xml_error">Error parsing XML.</string>
+	<string name="preference_category_network">Network</string>
+	<string name="preference_category_display">News Feed</string>
+	<string name="settings_title">Settings</string>
+
+	<!-- TODO: Remove or change this placeholder text -->
+	<string name="hello_blank_fragment">Hello blank fragment</string>
+	<string name="drawer_opened"/>
+	<string name="drawer_closed"/>
 </resources>

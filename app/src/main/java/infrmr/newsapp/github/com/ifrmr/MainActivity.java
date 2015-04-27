@@ -8,15 +8,17 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.widget.Toast;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
     private Toolbar toolbar;
+    DrawerFragment drawerFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +62,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        //getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        drawerFragment = (DrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        drawerFragment.setUp(R.id.navigation_drawer, (DrawerLayout) findViewById(R.id.drawer_layout), toolbar);
 
         // Register BroadcastReceiver to track connection changes.
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -137,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
     // Displays an error if the app is unable to load content.
     private void showErrorPage() {
         setContentView(R.layout.activity_main);
-
         // The specified network connection is not available. Displays error message.
         WebView myWebView = (WebView) findViewById(R.id.webview);
         myWebView.loadData(getResources().getString(R.string.connection_error),
@@ -168,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
             loadPage();
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -194,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
             myWebView.loadData(result, "text/html", null);
         }
     }
-
 
     // Uploads XML from TheVerge.com, parses it, and combines it with
     // HTML markup. Returns HTML string.
