@@ -8,15 +8,17 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.WebView;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -31,24 +33,22 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Tag for debugging
-    public String TAG = getClass().getSimpleName();
     // For checking user network connection preference
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
+    // Whether the display should be refreshed.
+    public static boolean refreshDisplay = true;
+    // The user's current network preference setting.
+    public static String sPref = null;
     // Default RSS Feed before loading from preference
     private static String URL = "http://www.theverge.com/android/rss/index.xml";
-
     // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
     // Whether there is a mobile connection.
     private static boolean mobileConnected = false;
-    // Whether the display should be refreshed.
-    public static boolean refreshDisplay = true;
-
-    // The user's current network preference setting.
-    public static String sPref = null;
-
+    // Tag for debugging
+    public String TAG = getClass().getSimpleName();
+    List<TheVergeXmlParser.Entry> entries = null;
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
     private Toolbar toolbar;
@@ -136,13 +136,15 @@ public class MainActivity extends AppCompatActivity {
 
     // Displays an error if the app is unable to load content.
     private void showErrorPage() {
+        // Update textview with error message
         setContentView(R.layout.activity_main);
-
-        // The specified network connection is not available. Displays error message.
-        WebView myWebView = (WebView) findViewById(R.id.webview);
-        myWebView.loadData(getResources().getString(R.string.connection_error),
-                "text/html", null);
+        TextView textView = (TextView) findViewById(R.id.textViewNews);
+        textView.setText(getString(R.string.connection_error));
     }
+
+    /**
+     * Helper method for initializing textviews, temporary until
+     */
 
 
     @Override
@@ -172,50 +174,17 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Implementation of AsyncTask used to download XML feed from stackoverflow.com.
-    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return loadXmlFromNetwork(urls[0]);
-            } catch (IOException e) {
-                return getResources().getString(R.string.connection_error);
-            } catch (XmlPullParserException e) {
-                return getResources().getString(R.string.xml_error);
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            setContentView(R.layout.activity_main);
-            // Displays the HTML string in the UI via a WebView
-            WebView myWebView = (WebView) findViewById(R.id.webview);
-            myWebView.loadData(result, "text/html", null);
-        }
-    }
-
-
     // Uploads XML from TheVerge.com, parses it, and combines it with
     // HTML markup. Returns HTML string.
     private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
         TheVergeXmlParser vergeXmlParser = new TheVergeXmlParser();
-        List<TheVergeXmlParser.Entry> entries = null;
+
         String title = null;
         String url = null;
         String summary = null;
         String content = null;
-        Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
 
-        // Checks whether the user set the preference to include summary text
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean pref = sharedPrefs.getBoolean("summaryPref", false);
-        StringBuilder htmlString = new StringBuilder();
-        htmlString.append("<h3>" + getResources().getString(R.string.page_title) + "</h3>");
-        htmlString.append("<em>" + getResources().getString(R.string.updated) + " " +
-                formatter.format(rightNow.getTime()) + "</em>");
         try {
             stream = downloadUrl(urlString);
             entries = vergeXmlParser.parse(stream);
@@ -228,35 +197,8 @@ public class MainActivity extends AppCompatActivity {
                 stream.close();
             }
         }
-        // StackOverflowXmlParser returns a List (called "entries") of Entry objects.
-        // Each Entry object represents a single post in the XML feed.
-        // This section processes the entries list to combine each entry with HTML markup.
-        // Each entry is displayed in the UI as a link that optionally includes
-        // a text summary.
-        if (null != entries) {
 
-            for (TheVergeXmlParser.Entry entry : entries) {
-                htmlString.append("<p><a href='");
-                htmlString.append(entry.link);
-
-                // if showing content of post, increase text size.
-                if (pref) {
-                    htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-                } else {
-                    htmlString.append("'>" + entry.title + "</a></p>");
-                }
-
-                //htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-                // If the user set the preference to include summary text,
-                // adds it to the display.
-                if (pref) {
-                    htmlString.append(entry.content + "<br><br>");
-                }
-            }
-        } else {
-            htmlString.append("No entries loaded, possible network timeout");
-        }
-        return htmlString.toString();
+        return "empty"; // todo remove
     }
 
     // Given a string representation of a URL, sets up a connection and gets
@@ -271,6 +213,184 @@ public class MainActivity extends AppCompatActivity {
         // Starts the query
         conn.connect();
         return conn.getInputStream();
+    }
+
+    /**
+     * Method for updating the TextViews with article information.
+     * @param result - the returned title string
+     */
+    private void updateArticles(String result) {
+        setContentView(R.layout.activity_main);
+
+        Calendar rightNow = Calendar.getInstance();
+        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
+
+        StringBuilder newsString = new StringBuilder();
+        newsString.append(getResources().getString(R.string.page_title) + "\n\n");
+        newsString.append(getResources().getString(R.string.updated) + " " + formatter.format(rightNow.getTime()));
+
+        TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
+        textViewNews.setText(newsString);
+
+
+        TextView article1 = (TextView) findViewById(R.id.article1);
+        article1.setText(entries.get(0).title);
+        article1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(0).title);
+                i.putExtra("content", entries.get(0).content);
+                i.putExtra("link", entries.get(0).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article2 = (TextView) findViewById(R.id.article2);
+        article2.setText(entries.get(1).title);
+        article2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(1).title);
+                i.putExtra("content", entries.get(1).content);
+                i.putExtra("link", entries.get(1).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article3 = (TextView) findViewById(R.id.article3);
+        article3.setText(entries.get(2).title);
+        article3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(2).title);
+                i.putExtra("content", entries.get(2).content);
+                i.putExtra("link", entries.get(2).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article4 = (TextView) findViewById(R.id.article4);
+        article4.setText(entries.get(3).title);
+        article4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(3).title);
+                i.putExtra("content", entries.get(3).content);
+                i.putExtra("link", entries.get(3).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article5 = (TextView) findViewById(R.id.article5);
+        article5.setText(entries.get(4).title);
+        article5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(4).title);
+                i.putExtra("content", entries.get(4).content);
+                i.putExtra("link", entries.get(4).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article6 = (TextView) findViewById(R.id.article6);
+        article6.setText(entries.get(5).title);
+        article6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(5).title);
+                i.putExtra("content", entries.get(5).content);
+                i.putExtra("link", entries.get(5).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article7 = (TextView) findViewById(R.id.article7);
+        article7.setText(entries.get(6).title);
+        article7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(6).title);
+                i.putExtra("content", entries.get(6).content);
+                i.putExtra("link", entries.get(6).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article8 = (TextView) findViewById(R.id.article8);
+        article8.setText(entries.get(7).title);
+        article8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(7).title);
+                i.putExtra("content", entries.get(7).content);
+                i.putExtra("link", entries.get(7).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article9 = (TextView) findViewById(R.id.article9);
+        article9.setText(entries.get(8).title);
+        article9.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(8).title);
+                i.putExtra("content", entries.get(8).content);
+                i.putExtra("link", entries.get(8).link);
+                startActivity(i);
+            }
+        });
+
+        TextView article10 = (TextView) findViewById(R.id.article10);
+        article10.setText(entries.get(9).title);
+        article10.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
+                i.putExtra("title", entries.get(9).title);
+                i.putExtra("content", entries.get(9).content);
+                i.putExtra("link", entries.get(9).link);
+                startActivity(i);
+            }
+        });
+
+    }
+
+    // Implementation of AsyncTask used to download XML feed from TheVerge.com.
+    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            setContentView(R.layout.activity_main);
+            TextView textView = (TextView) findViewById(R.id.textViewNews);
+            textView.setText("Loading Data...");
+        }
+
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                return loadXmlFromNetwork(urls[0]);
+            } catch (IOException e) {
+                return getResources().getString(R.string.connection_error);
+            } catch (XmlPullParserException e) {
+                return getResources().getString(R.string.xml_error);
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            updateArticles(result);
+        }
     }
 
     /**

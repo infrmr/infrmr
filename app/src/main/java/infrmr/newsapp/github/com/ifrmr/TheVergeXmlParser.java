@@ -122,7 +122,6 @@ public class TheVergeXmlParser {
         if (tag.equals("link")) {
             if (relType.equals("alternate")) {
                 link = parser.getAttributeValue(null, "href");
-                Log.d(getClass().getSimpleName(), "Url link: " + link);
                 parser.nextTag();
             } else if (relType.equals("enclosure")) { // TODO - Prevent link tag object creation for video link
                 link = parser.getAttributeValue(null, "href");
