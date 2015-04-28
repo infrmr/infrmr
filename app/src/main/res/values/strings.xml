@@ -7,6 +7,7 @@
     <string name="lost_connection">Lost connection.</string>
     <string name="wifi_connected">Wi-Fi reconnected.</string>
     <string name="connection_error">Unable to load content. Check your network connection.</string>
+    <string name="connection_timeout">Connection timeout. Check your network connection and try again.</string>
     <string name="xml_error">Error parsing XML.</string>
     <string name="preference_category_network">Network</string>
     <string name="preference_category_display">News Feed</string>

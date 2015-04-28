@@ -11,13 +11,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import net.steamcrafted.loadtoast.LoadToast;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -32,6 +34,11 @@ import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    /**
+     * TODO:
+     * - Preference summary
+     */
 
     // For checking user network connection preference
     public static final String WIFI = "Wi-Fi";
@@ -49,16 +56,15 @@ public class MainActivity extends AppCompatActivity {
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
     List<TheVergeXmlParser.Entry> entries = null;
+    // todo
+    LoadToast lt;
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
-    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         // Register BroadcastReceiver to track connection changes.
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -69,8 +75,8 @@ public class MainActivity extends AppCompatActivity {
     // Refreshes the display if the network connection and the
     // pref settings allow it.
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
 
         // Gets the user's network preference settings
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -119,14 +125,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Uses AsyncTask subclass to download the XML feed from stackoverflow.com.
-    // This avoids UI lock up. To prevent network operations from
-    // causing a delay that results in a poor user experience, always perform
-    // network operations on a separate thread from the UI.
+    /**
+     * Uses AsyncTask subclass to download XML feed from TheVerge.com concurrently.
+     * Checks to see if the users network preference matches available connections.
+     */
     private void loadPage() {
+        Log.i(TAG, "Refreshing Feed");
+        // launchRingDialog();
+
+        lt = new LoadToast(this);
+        lt.setText("Loading News...");
+        lt.show();
+
+
         if (((sPref.equals(ANY)) && (wifiConnected || mobileConnected))
                 || ((sPref.equals(WIFI)) && (wifiConnected))) {
-            // AsyncTask subclass
             new DownloadXmlTask().execute(URL);
         } else {
             showErrorPage();
@@ -141,10 +154,6 @@ public class MainActivity extends AppCompatActivity {
         TextView textView = (TextView) findViewById(R.id.textViewNews);
         textView.setText(getString(R.string.connection_error));
     }
-
-    /**
-     * Helper method for initializing textviews, temporary until
-     */
 
 
     @Override
@@ -176,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Uploads XML from TheVerge.com, parses it, and combines it with
     // HTML markup. Returns HTML string.
-    private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
+    private void loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
         TheVergeXmlParser vergeXmlParser = new TheVergeXmlParser();
 
@@ -198,7 +207,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        return "empty"; // todo remove
     }
 
     // Given a string representation of a URL, sets up a connection and gets
@@ -217,9 +225,13 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Method for updating the TextViews with article information.
-     * @param result - the returned title string
+     * TODO - Iterate through array of TextViews to reduce size of method
      */
     private void updateArticles(String result) {
+        // Prevent refresh
+        refreshDisplay = false;
+
+
         setContentView(R.layout.activity_main);
 
         Calendar rightNow = Calendar.getInstance();
@@ -232,6 +244,8 @@ public class MainActivity extends AppCompatActivity {
         TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
         textViewNews.setText(newsString);
 
+        LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
+        articleLayout.setVisibility(View.VISIBLE);
 
         TextView article1 = (TextView) findViewById(R.id.article1);
         article1.setText(entries.get(0).title);
@@ -374,12 +388,15 @@ public class MainActivity extends AppCompatActivity {
             setContentView(R.layout.activity_main);
             TextView textView = (TextView) findViewById(R.id.textViewNews);
             textView.setText("Loading Data...");
+            LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
+            articleLayout.setVisibility(View.INVISIBLE);
         }
 
         @Override
         protected String doInBackground(String... urls) {
             try {
-                return loadXmlFromNetwork(urls[0]);
+                loadXmlFromNetwork(urls[0]);
+                return getResources().getString(R.string.connection_timeout);
             } catch (IOException e) {
                 return getResources().getString(R.string.connection_error);
             } catch (XmlPullParserException e) {
@@ -389,7 +406,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            updateArticles(result);
+            /**
+             * If successful, update UI with article information, else show error message.
+             */
+            if (entries != null && entries.size() > 0) {
+                Log.i(TAG, "Post Execute - entries: " + entries.size());
+                updateArticles(result);
+                // Call this if it was successful
+                lt.success();
+            } else {
+                // Or this method if it failed
+                lt.error();
+                Log.i(TAG, "Post Execute - entries 0 / null");
+                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -434,5 +464,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 }
