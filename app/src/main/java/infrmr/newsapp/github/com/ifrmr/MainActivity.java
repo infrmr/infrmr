@@ -35,11 +35,6 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    /**
-     * TODO:
-     * - Preference summary
-     */
-
     // For checking user network connection preference
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
@@ -56,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
     List<TheVergeXmlParser.Entry> entries = null;
-    // todo
-    LoadToast lt;
+    // Reference for loading toast
+    LoadToast loadToast;
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
 
@@ -95,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         // display. For example, if the user has set "Wi-Fi only" in prefs and the
         // device loses its Wi-Fi connection midway through the user using the app,
         // you don't want to refresh the display--this would force the display of
-        // an error page instead of stackoverflow.com content.
+        // an error page instead of TheVerge.com content.
         if (refreshDisplay) {
             loadPage();
         }
@@ -130,17 +125,12 @@ public class MainActivity extends AppCompatActivity {
      * Checks to see if the users network preference matches available connections.
      */
     private void loadPage() {
-        Log.i(TAG, "Refreshing Feed");
-        // launchRingDialog();
-
-        lt = new LoadToast(this);
-        lt.setText("Loading News...");
-        lt.show();
-
-
         if (((sPref.equals(ANY)) && (wifiConnected || mobileConnected))
                 || ((sPref.equals(WIFI)) && (wifiConnected))) {
             new DownloadXmlTask().execute(URL);
+            loadToast = new LoadToast(this);
+            loadToast.setText("Loading News...");
+            loadToast.show();
         } else {
             showErrorPage();
             Log.d(TAG, "Error - Internet Connection");
@@ -225,158 +215,57 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Method for updating the TextViews with article information.
-     * TODO - Iterate through array of TextViews to reduce size of method
      */
-    private void updateArticles(String result) {
-        // Prevent refresh
-        refreshDisplay = false;
+    private void updateArticles() {
 
-
-        setContentView(R.layout.activity_main);
-
-        Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
-
-        StringBuilder newsString = new StringBuilder();
-        newsString.append(getResources().getString(R.string.page_title) + "\n\n");
-        newsString.append(getResources().getString(R.string.updated) + " " + formatter.format(rightNow.getTime()));
-
-        TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
-        textViewNews.setText(newsString);
-
+        // Show hidden layout
         LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
         articleLayout.setVisibility(View.VISIBLE);
 
-        TextView article1 = (TextView) findViewById(R.id.article1);
-        article1.setText(entries.get(0).title);
-        article1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(0).title);
-                i.putExtra("content", entries.get(0).content);
-                i.putExtra("link", entries.get(0).link);
-                startActivity(i);
-            }
-        });
+        setTitleString();
+        setArticleData();
+    }
 
-        TextView article2 = (TextView) findViewById(R.id.article2);
-        article2.setText(entries.get(1).title);
-        article2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(1).title);
-                i.putExtra("content", entries.get(1).content);
-                i.putExtra("link", entries.get(1).link);
-                startActivity(i);
-            }
-        });
+    /**
+     * Iterate through TextView's, setting title and onClickListener.
+     */
+    private void setArticleData() {
+        int[] textViewIDs = new int[]{R.id.article1, R.id.article2, R.id.article3, R.id.article4,
+                R.id.article5, R.id.article6, R.id.article7, R.id.article8, R.id.article9, R.id.article10};
 
-        TextView article3 = (TextView) findViewById(R.id.article3);
-        article3.setText(entries.get(2).title);
-        article3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(2).title);
-                i.putExtra("content", entries.get(2).content);
-                i.putExtra("link", entries.get(2).link);
-                startActivity(i);
-            }
-        });
+        for (int i = 0; i < textViewIDs.length; i++) {
+            final int finalI = i;
+            TextView tv = (TextView) findViewById(textViewIDs[i]);
+            tv.setText(entries.get(i).title);
 
-        TextView article4 = (TextView) findViewById(R.id.article4);
-        article4.setText(entries.get(3).title);
-        article4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(3).title);
-                i.putExtra("content", entries.get(3).content);
-                i.putExtra("link", entries.get(3).link);
-                startActivity(i);
-            }
-        });
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
+                    intent.putExtra("title", entries.get(finalI).title);
+                    intent.putExtra("content", entries.get(finalI).content);
+                    intent.putExtra("link", entries.get(finalI).link);
+                    startActivity(intent);
+                }
+            });
+        }
+    }
 
-        TextView article5 = (TextView) findViewById(R.id.article5);
-        article5.setText(entries.get(4).title);
-        article5.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(4).title);
-                i.putExtra("content", entries.get(4).content);
-                i.putExtra("link", entries.get(4).link);
-                startActivity(i);
-            }
-        });
-
-        TextView article6 = (TextView) findViewById(R.id.article6);
-        article6.setText(entries.get(5).title);
-        article6.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(5).title);
-                i.putExtra("content", entries.get(5).content);
-                i.putExtra("link", entries.get(5).link);
-                startActivity(i);
-            }
-        });
-
-        TextView article7 = (TextView) findViewById(R.id.article7);
-        article7.setText(entries.get(6).title);
-        article7.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(6).title);
-                i.putExtra("content", entries.get(6).content);
-                i.putExtra("link", entries.get(6).link);
-                startActivity(i);
-            }
-        });
-
-        TextView article8 = (TextView) findViewById(R.id.article8);
-        article8.setText(entries.get(7).title);
-        article8.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(7).title);
-                i.putExtra("content", entries.get(7).content);
-                i.putExtra("link", entries.get(7).link);
-                startActivity(i);
-            }
-        });
-
-        TextView article9 = (TextView) findViewById(R.id.article9);
-        article9.setText(entries.get(8).title);
-        article9.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(8).title);
-                i.putExtra("content", entries.get(8).content);
-                i.putExtra("link", entries.get(8).link);
-                startActivity(i);
-            }
-        });
-
-        TextView article10 = (TextView) findViewById(R.id.article10);
-        article10.setText(entries.get(9).title);
-        article10.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                i.putExtra("title", entries.get(9).title);
-                i.putExtra("content", entries.get(9).content);
-                i.putExtra("link", entries.get(9).link);
-                startActivity(i);
-            }
-        });
-
+    /**
+     * Helper method which returns title string & last updated text
+     */
+    private void setTitleString() {
+        // Get title String
+        StringBuilder newsString = new StringBuilder();
+        // Use these to get time
+        Calendar rightNow = Calendar.getInstance();
+        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
+        // Build title string
+        newsString.append(getResources().getString(R.string.page_title)).append("\n\n");
+        newsString.append(getResources().getString(R.string.updated)).append(" ").append(formatter.format(rightNow.getTime()));
+        // Get reference to title TextView, then set text
+        TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
+        textViewNews.setText(newsString);
     }
 
     // Implementation of AsyncTask used to download XML feed from TheVerge.com.
@@ -411,12 +300,12 @@ public class MainActivity extends AppCompatActivity {
              */
             if (entries != null && entries.size() > 0) {
                 Log.i(TAG, "Post Execute - entries: " + entries.size());
-                updateArticles(result);
+                updateArticles();
                 // Call this if it was successful
-                lt.success();
+                loadToast.success();
             } else {
                 // Or this method if it failed
-                lt.error();
+                loadToast.error();
                 Log.i(TAG, "Post Execute - entries 0 / null");
                 Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
             }

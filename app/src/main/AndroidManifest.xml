@@ -34,8 +34,7 @@
         </activity>
         <activity
             android:name=".ArticleActivity"
-            android:label="@string/title_activity_article"
-            android:parentActivityName=".MainActivity" >
+            android:label="@string/title_activity_article">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="infrmr.newsapp.github.com.ifrmr.MainActivity" />

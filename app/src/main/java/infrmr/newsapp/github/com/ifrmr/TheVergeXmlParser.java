@@ -123,9 +123,9 @@ public class TheVergeXmlParser {
             if (relType.equals("alternate")) {
                 link = parser.getAttributeValue(null, "href");
                 parser.nextTag();
-            } else if (relType.equals("enclosure")) { // TODO - Prevent link tag object creation for video link
-                link = parser.getAttributeValue(null, "href");
-                Log.d(getClass().getSimpleName(), "Video link: " + link);
+            } else if (relType.equals("enclosure")) {
+                // Ignore video url
+                Log.d(getClass().getSimpleName(), "Video link: " + parser.getAttributeValue(null, "href"));
                 parser.nextTag();
                 return link;
             }
