@@ -24,7 +24,7 @@
         <item>Mobile</item>
         <item>Photography &amp; Video</item>
         <item>Policy &amp; Law</item>
-        <item>Web * Social</item>
+        <item>Web &amp; Social</item>
     </string-array>
     <string-array name="listValuesTopic">
         <item>http://www.theverge.com/android/rss/index.xml</item>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="infrmr.newsapp.github.com.ifrmr">
+    package="infrmr.newsapp.github.com.ifrmr" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -9,11 +9,12 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
+
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,14 +24,21 @@
 
         <!-- Settings Activity -->
         <activity
-            android:label="@string/settings_title"
-            android:name=".SettingsActivity">
+            android:name=".SettingsActivity"
+            android:label="@string/settings_title" >
             <intent-filter>
                 <action android:name="android.intent.action.MANAGE_NETWORK_USAGE" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
+        <activity
+            android:name=".ArticleActivity"
+            android:label="@string/title_activity_article">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="infrmr.newsapp.github.com.ifrmr.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

@@ -5,7 +5,8 @@
         <!-- Customize your theme here. -->
     </style>
 
-	<style name="AppTheme.Base" parent="@style/Theme.AppCompat.Light.NoActionBar">
+    <!-- TODO: Re-enable Theme Base: "style/Theme.AppCompat.Light.NoActionBar" -->
+	<style name="AppTheme.Base" parent="style/Theme.AppCompat.Light">
 		<item name="colorPrimary">@color/colorPrimary</item>
 		<item name="colorPrimaryDark">@color/colorPrimaryDark</item>
 		<item name="colorAccent">@color/colorAccent</item>

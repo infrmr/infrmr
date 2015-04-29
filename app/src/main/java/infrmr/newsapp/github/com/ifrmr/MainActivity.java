@@ -8,15 +8,19 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.WebView;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import net.steamcrafted.loadtoast.LoadToast;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -31,34 +35,31 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Tag for debugging
-    public String TAG = getClass().getSimpleName();
     // For checking user network connection preference
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
+    // Whether the display should be refreshed.
+    public static boolean refreshDisplay = true;
+    // The user's current network preference setting.
+    public static String sPref = null;
     // Default RSS Feed before loading from preference
     private static String URL = "http://www.theverge.com/android/rss/index.xml";
-
     // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
     // Whether there is a mobile connection.
     private static boolean mobileConnected = false;
-    // Whether the display should be refreshed.
-    public static boolean refreshDisplay = true;
-
-    // The user's current network preference setting.
-    public static String sPref = null;
-
+    // Tag for debugging
+    public String TAG = getClass().getSimpleName();
+    List<TheVergeXmlParser.Entry> entries = null;
+    // Reference for loading toast
+    LoadToast loadToast;
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
-    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         // Register BroadcastReceiver to track connection changes.
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -69,8 +70,8 @@ public class MainActivity extends AppCompatActivity {
     // Refreshes the display if the network connection and the
     // pref settings allow it.
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
 
         // Gets the user's network preference settings
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -89,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         // display. For example, if the user has set "Wi-Fi only" in prefs and the
         // device loses its Wi-Fi connection midway through the user using the app,
         // you don't want to refresh the display--this would force the display of
-        // an error page instead of stackoverflow.com content.
+        // an error page instead of TheVerge.com content.
         if (refreshDisplay) {
             loadPage();
         }
@@ -119,15 +120,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Uses AsyncTask subclass to download the XML feed from stackoverflow.com.
-    // This avoids UI lock up. To prevent network operations from
-    // causing a delay that results in a poor user experience, always perform
-    // network operations on a separate thread from the UI.
+    /**
+     * Uses AsyncTask subclass to download XML feed from TheVerge.com concurrently.
+     * Checks to see if the users network preference matches available connections.
+     */
     private void loadPage() {
         if (((sPref.equals(ANY)) && (wifiConnected || mobileConnected))
                 || ((sPref.equals(WIFI)) && (wifiConnected))) {
-            // AsyncTask subclass
             new DownloadXmlTask().execute(URL);
+            loadToast = new LoadToast(this);
+            loadToast.setText("Loading News...");
+            loadToast.show();
         } else {
             showErrorPage();
             Log.d(TAG, "Error - Internet Connection");
@@ -136,12 +139,10 @@ public class MainActivity extends AppCompatActivity {
 
     // Displays an error if the app is unable to load content.
     private void showErrorPage() {
+        // Update textview with error message
         setContentView(R.layout.activity_main);
-
-        // The specified network connection is not available. Displays error message.
-        WebView myWebView = (WebView) findViewById(R.id.webview);
-        myWebView.loadData(getResources().getString(R.string.connection_error),
-                "text/html", null);
+        TextView textView = (TextView) findViewById(R.id.textViewNews);
+        textView.setText(getString(R.string.connection_error));
     }
 
 
@@ -172,50 +173,17 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Implementation of AsyncTask used to download XML feed from stackoverflow.com.
-    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return loadXmlFromNetwork(urls[0]);
-            } catch (IOException e) {
-                return getResources().getString(R.string.connection_error);
-            } catch (XmlPullParserException e) {
-                return getResources().getString(R.string.xml_error);
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            setContentView(R.layout.activity_main);
-            // Displays the HTML string in the UI via a WebView
-            WebView myWebView = (WebView) findViewById(R.id.webview);
-            myWebView.loadData(result, "text/html", null);
-        }
-    }
-
-
     // Uploads XML from TheVerge.com, parses it, and combines it with
     // HTML markup. Returns HTML string.
-    private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
+    private void loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
         TheVergeXmlParser vergeXmlParser = new TheVergeXmlParser();
-        List<TheVergeXmlParser.Entry> entries = null;
+
         String title = null;
         String url = null;
         String summary = null;
         String content = null;
-        Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
 
-        // Checks whether the user set the preference to include summary text
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean pref = sharedPrefs.getBoolean("summaryPref", false);
-        StringBuilder htmlString = new StringBuilder();
-        htmlString.append("<h3>" + getResources().getString(R.string.page_title) + "</h3>");
-        htmlString.append("<em>" + getResources().getString(R.string.updated) + " " +
-                formatter.format(rightNow.getTime()) + "</em>");
         try {
             stream = downloadUrl(urlString);
             entries = vergeXmlParser.parse(stream);
@@ -228,35 +196,7 @@ public class MainActivity extends AppCompatActivity {
                 stream.close();
             }
         }
-        // StackOverflowXmlParser returns a List (called "entries") of Entry objects.
-        // Each Entry object represents a single post in the XML feed.
-        // This section processes the entries list to combine each entry with HTML markup.
-        // Each entry is displayed in the UI as a link that optionally includes
-        // a text summary.
-        if (null != entries) {
 
-            for (TheVergeXmlParser.Entry entry : entries) {
-                htmlString.append("<p><a href='");
-                htmlString.append(entry.link);
-
-                // if showing content of post, increase text size.
-                if (pref) {
-                    htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-                } else {
-                    htmlString.append("'>" + entry.title + "</a></p>");
-                }
-
-                //htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-                // If the user set the preference to include summary text,
-                // adds it to the display.
-                if (pref) {
-                    htmlString.append(entry.content + "<br><br>");
-                }
-            }
-        } else {
-            htmlString.append("No entries loaded, possible network timeout");
-        }
-        return htmlString.toString();
     }
 
     // Given a string representation of a URL, sets up a connection and gets
@@ -271,6 +211,105 @@ public class MainActivity extends AppCompatActivity {
         // Starts the query
         conn.connect();
         return conn.getInputStream();
+    }
+
+    /**
+     * Method for updating the TextViews with article information.
+     */
+    private void updateArticles() {
+
+        // Show hidden layout
+        LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
+        articleLayout.setVisibility(View.VISIBLE);
+
+        setTitleString();
+        setArticleData();
+    }
+
+    /**
+     * Iterate through TextView's, setting title and onClickListener.
+     */
+    private void setArticleData() {
+        int[] textViewIDs = new int[]{R.id.article1, R.id.article2, R.id.article3, R.id.article4,
+                R.id.article5, R.id.article6, R.id.article7, R.id.article8, R.id.article9, R.id.article10};
+
+        for (int i = 0; i < textViewIDs.length; i++) {
+            final int finalI = i;
+            TextView tv = (TextView) findViewById(textViewIDs[i]);
+            tv.setText(entries.get(i).title);
+
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
+                    intent.putExtra("title", entries.get(finalI).title);
+                    intent.putExtra("content", entries.get(finalI).content);
+                    intent.putExtra("link", entries.get(finalI).link);
+                    startActivity(intent);
+                }
+            });
+        }
+    }
+
+    /**
+     * Helper method which returns title string & last updated text
+     */
+    private void setTitleString() {
+        // Get title String
+        StringBuilder newsString = new StringBuilder();
+        // Use these to get time
+        Calendar rightNow = Calendar.getInstance();
+        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
+        // Build title string
+        newsString.append(getResources().getString(R.string.page_title)).append("\n\n");
+        newsString.append(getResources().getString(R.string.updated)).append(" ").append(formatter.format(rightNow.getTime()));
+        // Get reference to title TextView, then set text
+        TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
+        textViewNews.setText(newsString);
+    }
+
+    // Implementation of AsyncTask used to download XML feed from TheVerge.com.
+    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            setContentView(R.layout.activity_main);
+            TextView textView = (TextView) findViewById(R.id.textViewNews);
+            textView.setText("Loading Data...");
+            LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
+            articleLayout.setVisibility(View.INVISIBLE);
+        }
+
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                loadXmlFromNetwork(urls[0]);
+                return getResources().getString(R.string.connection_timeout);
+            } catch (IOException e) {
+                return getResources().getString(R.string.connection_error);
+            } catch (XmlPullParserException e) {
+                return getResources().getString(R.string.xml_error);
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            /**
+             * If successful, update UI with article information, else show error message.
+             */
+            if (entries != null && entries.size() > 0) {
+                Log.i(TAG, "Post Execute - entries: " + entries.size());
+                updateArticles();
+                // Call this if it was successful
+                loadToast.success();
+            } else {
+                // Or this method if it failed
+                loadToast.error();
+                Log.i(TAG, "Post Execute - entries 0 / null");
+                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     /**
@@ -314,5 +353,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 }
