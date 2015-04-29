@@ -1,5 +1,6 @@
 package infrmr.newsapp.github.com.ifrmr;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,11 +11,17 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,7 +40,13 @@ import java.util.Calendar;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+
+    /**
+     * TODO
+     * - Refresh error, on resume, load or just call textview method
+     * - When NAV item chosen, auto refresh
+     */
 
     // For checking user network connection preference
     public static final String WIFI = "Wi-Fi";
@@ -56,10 +69,25 @@ public class MainActivity extends AppCompatActivity {
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
 
+    // Navigation Bar
+    // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
+    private NavigationDrawerFragment mNavigationDrawerFragment;
+    // Used to store the last screen title. For use in {@link #restoreActionBar()}.
+    private CharSequence mTitle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.my_navigation_drawer);
+        mTitle = getTitle();
+
+        // Set up the drawer.
+        mNavigationDrawerFragment.setUp(
+                R.id.my_navigation_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout));
 
         // Register BroadcastReceiver to track connection changes.
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -72,6 +100,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+
+        checkConnectionThenLoadPage();
+
+    }
+
+    public void checkConnectionThenLoadPage() {
 
         // Gets the user's network preference settings
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -124,7 +158,15 @@ public class MainActivity extends AppCompatActivity {
      * Uses AsyncTask subclass to download XML feed from TheVerge.com concurrently.
      * Checks to see if the users network preference matches available connections.
      */
-    private void loadPage() {
+    public void loadPage() {
+
+        // Gets the user's network preference settings
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Retrieves a string value for the preferences. The second parameter
+        // is the default value to use if a preference value is not found.
+        sPref = sharedPrefs.getString("listPref", "Wi-Fi");
+
         if (((sPref.equals(ANY)) && (wifiConnected || mobileConnected))
                 || ((sPref.equals(WIFI)) && (wifiConnected))) {
             new DownloadXmlTask().execute(URL);
@@ -132,19 +174,10 @@ public class MainActivity extends AppCompatActivity {
             loadToast.setText("Loading News...");
             loadToast.show();
         } else {
-            showErrorPage();
-            Log.d(TAG, "Error - Internet Connection");
+            Toast.makeText(getApplicationContext(), "Unable to load content. Check your network " +
+                    "connection and try again.", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // Displays an error if the app is unable to load content.
-    private void showErrorPage() {
-        // Update textview with error message
-        setContentView(R.layout.activity_main);
-        TextView textView = (TextView) findViewById(R.id.textViewNews);
-        textView.setText(getString(R.string.connection_error));
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -268,13 +301,87 @@ public class MainActivity extends AppCompatActivity {
         textViewNews.setText(newsString);
     }
 
+    /**
+     * Navigation Drawers
+     */
+
+    @Override
+    public void onNavigationDrawerItemSelected(int position) {
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
+                .commit();
+    }
+
+    public void onSectionAttached(int number) {
+        switch (number) {
+            case 1:
+                mTitle = getString(R.string.title_section1);
+                break;
+            case 2:
+                mTitle = getString(R.string.title_section2);
+                break;
+            case 3:
+                mTitle = getString(R.string.title_section3);
+                break;
+        }
+    }
+
+    public void restoreActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        actionBar.setDisplayShowTitleEnabled(true);
+        actionBar.setTitle(mTitle);
+    }
+
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class PlaceholderFragment extends Fragment {
+        /**
+         * The fragment argument representing the section number for this
+         * fragment.
+         */
+        private static final String ARG_SECTION_NUMBER = "section_number";
+
+        public PlaceholderFragment() {
+        }
+
+        /**
+         * Returns a new instance of this fragment for the given section
+         * number.
+         */
+        public static PlaceholderFragment newInstance(int sectionNumber) {
+            PlaceholderFragment fragment = new PlaceholderFragment();
+            Bundle args = new Bundle();
+            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+            fragment.setArguments(args);
+            return fragment;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+            return rootView;
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            ((MainActivity) activity).onSectionAttached(
+                    getArguments().getInt(ARG_SECTION_NUMBER));
+        }
+    }
+
     // Implementation of AsyncTask used to download XML feed from TheVerge.com.
     private class DownloadXmlTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            setContentView(R.layout.activity_main);
+            //setContentView(R.layout.activity_main);
             TextView textView = (TextView) findViewById(R.id.textViewNews);
             textView.setText("Loading Data...");
             LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
@@ -311,6 +418,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    // Fragment
 
     /**
      * This BroadcastReceiver intercepts the android.net.ConnectivityManager.CONNECTIVITY_ACTION,
