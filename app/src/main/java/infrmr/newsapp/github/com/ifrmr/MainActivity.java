@@ -167,6 +167,9 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         // is the default value to use if a preference value is not found.
         sPref = sharedPrefs.getString("listPref", "Wi-Fi");
 
+        // CHeck internet connection
+        updateConnectedFlags();
+
         if (((sPref.equals(ANY)) && (wifiConnected || mobileConnected))
                 || ((sPref.equals(WIFI)) && (wifiConnected))) {
             new DownloadXmlTask().execute(URL);
