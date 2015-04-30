@@ -3,6 +3,7 @@ package infrmr.newsapp.github.com.ifrmr;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.ListPreference;
 import android.preference.PreferenceFragment;
 
 
@@ -14,6 +15,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         // Loads the XML preferences file.
         addPreferencesFromResource(R.xml.preferences);
+
+        // Init preference summaries
+        updatePrefSummary();
     }
 
     @Override
@@ -31,5 +35,20 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         // Sets refreshDisplay to true so that when the user returns to the main
         // activity, the display refreshes to reflect the new settings.
         MainActivity.refreshDisplay = true;
+        updatePrefSummary();
     }
+
+    /**
+     * Helper method for updating preference summary
+     */
+    public void updatePrefSummary() {
+        // The preference for news feed topic
+        ListPreference feedPref = (ListPreference) getPreferenceManager().findPreference("topicPref");
+        feedPref.setSummary(feedPref.getEntry());
+
+        // The preference for network download
+        ListPreference listPref = (ListPreference) getPreferenceManager().findPreference("listPref");
+        listPref.setSummary(listPref.getEntry());
+    }
+
 }

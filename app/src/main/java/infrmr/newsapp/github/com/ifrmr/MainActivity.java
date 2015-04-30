@@ -1,5 +1,6 @@
 package infrmr.newsapp.github.com.ifrmr;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,15 +9,26 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
+import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.WebView;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import net.steamcrafted.loadtoast.LoadToast;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -29,36 +41,55 @@ import java.util.Calendar;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
-    // Tag for debugging
-    public String TAG = getClass().getSimpleName();
+    /**
+     * TODO
+     * - I had to change parent class from AppCompatActivity to ActionBarActivity, because I couldn't work
+     *   out how to return the ActionBar in NavigationDrawerFragment.getActionBar(); Crashes.
+     *
+     * - If desired, auto refresh in onResume
+     */
+
     // For checking user network connection preference
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
+    // Whether the display should be refreshed.
+    public static boolean refreshDisplay = true;
+    // The user's current network preference setting.
+    public static String sPref = null;
     // Default RSS Feed before loading from preference
     private static String URL = "http://www.theverge.com/android/rss/index.xml";
-
     // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
     // Whether there is a mobile connection.
     private static boolean mobileConnected = false;
-    // Whether the display should be refreshed.
-    public static boolean refreshDisplay = true;
-
-    // The user's current network preference setting.
-    public static String sPref = null;
-
+    // Tag for debugging
+    public String TAG = getClass().getSimpleName();
+    List<TheVergeXmlParser.Entry> entries = null;
+    // Reference for loading toast
+    LoadToast loadToast;
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
-    private Toolbar toolbar;
+
+    // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
+    private NavigationDrawerFragment mNavigationDrawerFragment;
+    // Used to store the last screen title. For use in ActionBar.
+    private CharSequence mTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+
+        mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.my_navigation_drawer);
+        mTitle = getTitle();
+
+        // Set up the drawer.
+        mNavigationDrawerFragment.setUp(
+                R.id.my_navigation_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout));
 
         // Register BroadcastReceiver to track connection changes.
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -69,8 +100,18 @@ public class MainActivity extends AppCompatActivity {
     // Refreshes the display if the network connection and the
     // pref settings allow it.
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
+
+        checkConnectionThenLoadPage();
+
+    }
+
+    /**
+     * Method which gets the users current network status, compares to users network preference,
+     * then calls the loadPage() method if desired.
+     */
+    public void checkConnectionThenLoadPage() {
 
         // Gets the user's network preference settings
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -82,14 +123,14 @@ public class MainActivity extends AppCompatActivity {
         // Retrieves the users preference for news topic
         URL = sharedPrefs.getString("topicPref", "http://www.theverge.com/android/rss/index.xml");
 
-        // CHeck internet connection
+        // Check internet connection
         updateConnectedFlags();
 
         // Only loads the page if refreshDisplay is true. Otherwise, keeps previous
         // display. For example, if the user has set "Wi-Fi only" in prefs and the
         // device loses its Wi-Fi connection midway through the user using the app,
         // you don't want to refresh the display--this would force the display of
-        // an error page instead of stackoverflow.com content.
+        // an error page instead of TheVerge.com content.
         if (refreshDisplay) {
             loadPage();
         }
@@ -119,36 +160,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Uses AsyncTask subclass to download the XML feed from stackoverflow.com.
-    // This avoids UI lock up. To prevent network operations from
-    // causing a delay that results in a poor user experience, always perform
-    // network operations on a separate thread from the UI.
-    private void loadPage() {
+    /**
+     * Uses AsyncTask subclass to download XML feed from TheVerge.com concurrently.
+     * Checks to see if the users network preference matches available connections.
+     */
+    public void loadPage() {
+
+        // Gets the user's network preference settings
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Retrieves a string value for the preferences. The second parameter
+        // is the default value to use if a preference value is not found.
+        sPref = sharedPrefs.getString("listPref", "Wi-Fi");
+
+        // CHeck internet connection
+        updateConnectedFlags();
+
         if (((sPref.equals(ANY)) && (wifiConnected || mobileConnected))
                 || ((sPref.equals(WIFI)) && (wifiConnected))) {
-            // AsyncTask subclass
             new DownloadXmlTask().execute(URL);
+            loadToast = new LoadToast(this);
+            loadToast.setText("Loading News...");
+            loadToast.show();
         } else {
-            showErrorPage();
-            Log.d(TAG, "Error - Internet Connection");
+            Toast.makeText(getApplicationContext(), "Unable to load content. Check your network " +
+                    "connection and try again.", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // Displays an error if the app is unable to load content.
-    private void showErrorPage() {
-        setContentView(R.layout.activity_main);
-
-        // The specified network connection is not available. Displays error message.
-        WebView myWebView = (WebView) findViewById(R.id.webview);
-        myWebView.loadData(getResources().getString(R.string.connection_error),
-                "text/html", null);
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        restoreActionBar();
         return true;
     }
 
@@ -172,50 +216,16 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Implementation of AsyncTask used to download XML feed from stackoverflow.com.
-    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return loadXmlFromNetwork(urls[0]);
-            } catch (IOException e) {
-                return getResources().getString(R.string.connection_error);
-            } catch (XmlPullParserException e) {
-                return getResources().getString(R.string.xml_error);
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            setContentView(R.layout.activity_main);
-            // Displays the HTML string in the UI via a WebView
-            WebView myWebView = (WebView) findViewById(R.id.webview);
-            myWebView.loadData(result, "text/html", null);
-        }
-    }
-
-
     // Uploads XML from TheVerge.com, parses it, and combines it with
     // HTML markup. Returns HTML string.
-    private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
+    private void loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
         TheVergeXmlParser vergeXmlParser = new TheVergeXmlParser();
-        List<TheVergeXmlParser.Entry> entries = null;
+
         String title = null;
         String url = null;
-        String summary = null;
         String content = null;
-        Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
 
-        // Checks whether the user set the preference to include summary text
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean pref = sharedPrefs.getBoolean("summaryPref", false);
-        StringBuilder htmlString = new StringBuilder();
-        htmlString.append("<h3>" + getResources().getString(R.string.page_title) + "</h3>");
-        htmlString.append("<em>" + getResources().getString(R.string.updated) + " " +
-                formatter.format(rightNow.getTime()) + "</em>");
         try {
             stream = downloadUrl(urlString);
             entries = vergeXmlParser.parse(stream);
@@ -228,35 +238,7 @@ public class MainActivity extends AppCompatActivity {
                 stream.close();
             }
         }
-        // StackOverflowXmlParser returns a List (called "entries") of Entry objects.
-        // Each Entry object represents a single post in the XML feed.
-        // This section processes the entries list to combine each entry with HTML markup.
-        // Each entry is displayed in the UI as a link that optionally includes
-        // a text summary.
-        if (null != entries) {
 
-            for (TheVergeXmlParser.Entry entry : entries) {
-                htmlString.append("<p><a href='");
-                htmlString.append(entry.link);
-
-                // if showing content of post, increase text size.
-                if (pref) {
-                    htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-                } else {
-                    htmlString.append("'>" + entry.title + "</a></p>");
-                }
-
-                //htmlString.append("' style='font-size: 25px; text-decoration: none'>" + entry.title + "</a></p>");
-                // If the user set the preference to include summary text,
-                // adds it to the display.
-                if (pref) {
-                    htmlString.append(entry.content + "<br><br>");
-                }
-            }
-        } else {
-            htmlString.append("No entries loaded, possible network timeout");
-        }
-        return htmlString.toString();
     }
 
     // Given a string representation of a URL, sets up a connection and gets
@@ -272,6 +254,184 @@ public class MainActivity extends AppCompatActivity {
         conn.connect();
         return conn.getInputStream();
     }
+
+    /**
+     * Method for updating the TextViews with article information.
+     */
+    private void updateArticles() {
+
+        // Show hidden layout
+        LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
+        articleLayout.setVisibility(View.VISIBLE);
+
+        setTitleString();
+        setArticleData();
+    }
+
+    /**
+     * Iterate through TextView's, setting title and onClickListener for each.
+     */
+    private void setArticleData() {
+        // Create array of TextView references
+        int[] textViewIDs = new int[]{R.id.article1, R.id.article2, R.id.article3, R.id.article4,
+                R.id.article5, R.id.article6, R.id.article7, R.id.article8, R.id.article9, R.id.article10};
+
+        // Iterate through array
+        for (int i = 0; i < textViewIDs.length; i++) {
+            final int finalI = i;
+
+            TextView tv = (TextView) findViewById(textViewIDs[i]);
+            tv.setText(entries.get(i).title);
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
+                    intent.putExtra("title", entries.get(finalI).title);
+                    intent.putExtra("content", entries.get(finalI).content);
+                    intent.putExtra("link", entries.get(finalI).link);
+                    startActivity(intent);
+                }
+            });
+        }
+    }
+
+    /**
+     * Helper method which returns title string & last updated text
+     */
+    private void setTitleString() {
+        // Get title String
+        StringBuilder newsString = new StringBuilder();
+        // Use these to get time
+        Calendar rightNow = Calendar.getInstance();
+        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
+        // Build title string
+        newsString.append(getResources().getString(R.string.page_title)).append("\n\n");
+        newsString.append(getResources().getString(R.string.updated)).append(" ").append(formatter.format(rightNow.getTime()));
+        // Get reference to title TextView, then set text
+        TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
+        textViewNews.setText(newsString);
+    }
+
+    /**
+     * NavigationDrawer methods below
+     */
+
+    @Override
+    public void onNavigationDrawerItemSelected(int position) {
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
+                .commit();
+    }
+
+    public void onSectionAttached(int number) {
+        switch (number) {
+            case 1:
+                mTitle = getString(R.string.title_section1);
+                break;
+            case 2:
+                mTitle = getString(R.string.title_section2);
+                break;
+            case 3:
+                mTitle = getString(R.string.title_section3);
+                break;
+        }
+    }
+
+    public void restoreActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        if (null != actionBar) {
+            actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+            actionBar.setDisplayShowTitleEnabled(true);
+            actionBar.setTitle(mTitle);
+        }
+    }
+
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class PlaceholderFragment extends Fragment {
+        /**
+         * The fragment argument representing the section number for this
+         * fragment.
+         */
+        private static final String ARG_SECTION_NUMBER = "section_number";
+
+        public PlaceholderFragment() {
+        }
+
+        /**
+         * Returns a new instance of this fragment for the given section
+         * number.
+         */
+        public static PlaceholderFragment newInstance(int sectionNumber) {
+            PlaceholderFragment fragment = new PlaceholderFragment();
+            Bundle args = new Bundle();
+            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+            fragment.setArguments(args);
+            return fragment;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.fragment_main, container, false);
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            ((MainActivity) activity).onSectionAttached(
+                    getArguments().getInt(ARG_SECTION_NUMBER));
+        }
+    }
+
+    // Implementation of AsyncTask used to download XML feed from TheVerge.com.
+    private class DownloadXmlTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            //setContentView(R.layout.activity_main);
+            TextView textView = (TextView) findViewById(R.id.textViewNews);
+            textView.setText("Loading Data...");
+            LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
+            articleLayout.setVisibility(View.INVISIBLE);
+        }
+
+        @Override
+        protected String doInBackground(String... urls) {
+            try {
+                loadXmlFromNetwork(urls[0]);
+                return getResources().getString(R.string.connection_timeout);
+            } catch (IOException e) {
+                return getResources().getString(R.string.connection_error);
+            } catch (XmlPullParserException e) {
+                return getResources().getString(R.string.xml_error);
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            /**
+             * If successful, update UI with article information, else show error message.
+             */
+            if (entries != null && entries.size() > 0) {
+                Log.i(TAG, "Post Execute - entries: " + entries.size());
+                updateArticles();
+                // Call this if it was successful
+                loadToast.success();
+            } else {
+                // Or this method if it failed
+                loadToast.error();
+                Log.i(TAG, "Post Execute - entries 0 / null");
+                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    // Fragment
 
     /**
      * This BroadcastReceiver intercepts the android.net.ConnectivityManager.CONNECTIVITY_ACTION,
@@ -314,5 +474,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 }
