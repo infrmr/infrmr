@@ -16,6 +16,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -44,8 +45,10 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     /**
      * TODO
-     * - Refresh error, on resume, load or just call textview method
-     * - When NAV item chosen, auto refresh
+     * - I had to change parent class from AppCompatActivity to ActionBarActivity, because I couldn't work
+     *   out how to return the ActionBar in NavigationDrawerFragment.getActionBar(); Crashes.
+     *
+     * - If desired, auto refresh in onResume
      */
 
     // For checking user network connection preference
@@ -69,10 +72,9 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
 
-    // Navigation Bar
     // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
     private NavigationDrawerFragment mNavigationDrawerFragment;
-    // Used to store the last screen title. For use in {@link #restoreActionBar()}.
+    // Used to store the last screen title. For use in ActionBar.
     private CharSequence mTitle;
 
     @Override
@@ -105,6 +107,10 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     }
 
+    /**
+     * Method which gets the users current network status, compares to users network preference,
+     * then calls the loadPage() method if desired.
+     */
     public void checkConnectionThenLoadPage() {
 
         // Gets the user's network preference settings
@@ -117,7 +123,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         // Retrieves the users preference for news topic
         URL = sharedPrefs.getString("topicPref", "http://www.theverge.com/android/rss/index.xml");
 
-        // CHeck internet connection
+        // Check internet connection
         updateConnectedFlags();
 
         // Only loads the page if refreshDisplay is true. Otherwise, keeps previous
@@ -186,6 +192,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        restoreActionBar();
         return true;
     }
 
@@ -217,7 +224,6 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
         String title = null;
         String url = null;
-        String summary = null;
         String content = null;
 
         try {
@@ -263,17 +269,19 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     }
 
     /**
-     * Iterate through TextView's, setting title and onClickListener.
+     * Iterate through TextView's, setting title and onClickListener for each.
      */
     private void setArticleData() {
+        // Create array of TextView references
         int[] textViewIDs = new int[]{R.id.article1, R.id.article2, R.id.article3, R.id.article4,
                 R.id.article5, R.id.article6, R.id.article7, R.id.article8, R.id.article9, R.id.article10};
 
+        // Iterate through array
         for (int i = 0; i < textViewIDs.length; i++) {
             final int finalI = i;
+
             TextView tv = (TextView) findViewById(textViewIDs[i]);
             tv.setText(entries.get(i).title);
-
             tv.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -305,7 +313,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     }
 
     /**
-     * Navigation Drawers
+     * NavigationDrawer methods below
      */
 
     @Override
@@ -333,9 +341,11 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setTitle(mTitle);
+        if (null != actionBar) {
+            actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+            actionBar.setDisplayShowTitleEnabled(true);
+            actionBar.setTitle(mTitle);
+        }
     }
 
     /**
@@ -366,8 +376,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
+            return inflater.inflate(R.layout.fragment_main, container, false);
         }
 
         @Override

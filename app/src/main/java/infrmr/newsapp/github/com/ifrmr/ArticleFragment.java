@@ -40,13 +40,15 @@ public class ArticleFragment extends Fragment {
     /**
      * Method for creating the article html code
      *
-     * @param title
-     * @param content
+     * @param title - title of article
+     * @param content - article content
      * @return - The completed string to be passed to WebView
      */
     private String getHtmlContent(String title, String content) {
 
+        // Create StringBuilder object, used to build html string
         StringBuilder htmlString = new StringBuilder();
+        // Used to get the updated time
         Calendar rightNow = Calendar.getInstance();
         DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
 

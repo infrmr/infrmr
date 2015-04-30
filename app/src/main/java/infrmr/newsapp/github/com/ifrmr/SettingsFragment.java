@@ -42,9 +42,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
      * Helper method for updating preference summary
      */
     public void updatePrefSummary() {
+        // The preference for news feed topic
         ListPreference feedPref = (ListPreference) getPreferenceManager().findPreference("topicPref");
         feedPref.setSummary(feedPref.getEntry());
 
+        // The preference for network download
         ListPreference listPref = (ListPreference) getPreferenceManager().findPreference("listPref");
         listPref.setSummary(listPref.getEntry());
     }

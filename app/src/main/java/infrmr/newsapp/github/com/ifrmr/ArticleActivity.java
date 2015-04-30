@@ -5,13 +5,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-
+/**
+ * Activity which hosts the article Fragment
+ */
 public class ArticleActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Display the settings fragment as the main content.
+        // Display the settings fragment
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new ArticleFragment())
                 .commit();

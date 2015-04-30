@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/preference_category_display">
+        <!-- News feed topic choice -->
         <ListPreference
             android:title="News Category"
             android:summary="The news topic would you like to view."
@@ -8,13 +9,9 @@
             android:defaultValue="http://www.theverge.com/android/rss/index.xml"
             android:entries="@array/listArrayTopic"
             android:entryValues="@array/listValuesTopic" />
-        <CheckBoxPreference
-            android:title="Show Summaries"
-            android:defaultValue="false"
-            android:summary="Show a summary for each link."
-            android:key="summaryPref" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/preference_category_network">
+        <!-- Choice of downloading only on wifi -->
         <ListPreference
             android:title="Download Feed"
             android:summary="Network connectivity required to download the feed."
