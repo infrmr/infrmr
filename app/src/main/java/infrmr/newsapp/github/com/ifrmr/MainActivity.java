@@ -35,6 +35,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -42,10 +43,11 @@ import java.util.Locale;
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
+import infrmr.newsapp.github.com.ifrmr.dummy.DummyContent;
 import infrmr.newsapp.github.com.ifrmr.settings.SettingsActivity;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks, ArticleListFragment.OnFragmentInteractionListener {
 
     /**
      * TODO
@@ -67,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     private static boolean mobileConnected = false;
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
-    private List<TheVergeXmlParser.Entry> entries;
+    public static List<TheVergeXmlParser.Entry> entries;
     // Reference for loading toast
     LoadToast loadToast;
     // The BroadcastReceiver that tracks network connectivity changes.
@@ -82,6 +84,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // init entries test todo
+        List<TheVergeXmlParser.Entry> entries = new ArrayList<TheVergeXmlParser.Entry>();
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.my_navigation_drawer);
@@ -128,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         // you don't want to refresh the display--this would force the display of
         // an error page instead of TheVerge.com content.
         if (refreshDisplay) {
-            loadPage();
+            // TODO - loadPage();
         }
     }
 
@@ -311,8 +316,8 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, SectionFragment.newInstance(position + 1))
-                .commit();
+                .replace(R.id.container, ArticleListFragment.newInstance(position + 1)).commit(); // todo SectionFragment
+
     }
 
     public void onSectionAttached(int number) {
@@ -335,6 +340,11 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setTitle(mTitle);
         }
+    }
+
+    @Override
+    public void onFragmentInteraction(String id) {
+        //  nothing
     }
 
     /**
@@ -385,10 +395,10 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         protected void onPreExecute() {
             super.onPreExecute();
             //setContentView(R.layout.activity_main);
-            TextView textView = (TextView) findViewById(R.id.textViewNews);
-            textView.setText(getString(R.string.loading));
-            LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
-            articleLayout.setVisibility(View.INVISIBLE);
+            //todo-remove TextView textView = (TextView) findViewById(R.id.textViewNews);
+            //todo-remove textView.setText(getString(R.string.loading));
+            //todo-remove LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
+            //todo-remove articleLayout.setVisibility(View.INVISIBLE);
         }
 
         @Override
@@ -410,7 +420,18 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
              */
             if (entries != null && entries.size() > 0) {
                 Log.i(TAG, "Post Execute - entries: " + entries.size());
-                updateArticles();
+                //todo-remove updateArticles();
+                // Test
+                DummyContent.DummyItem d = new DummyContent.DummyItem("0", "Entry");
+                DummyContent.ITEMS.add(d);
+                DummyContent.DummyItem d2 = new DummyContent.DummyItem("0", "sommTHANG");
+                DummyContent.ITEMS.add(d2);
+
+                // Show new Fragment
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                fragmentManager.beginTransaction()
+                        .replace(R.id.container, ArticleListFragment.newInstance()).commit();
+
                 // Call this if it was successful
                 loadToast.success();
             } else {
