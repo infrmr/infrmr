@@ -1,10 +1,13 @@
-package infrmr.newsapp.github.com.ifrmr;
+package infrmr.newsapp.github.com.ifrmr.settings;
 
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.PreferenceFragment;
+
+import infrmr.newsapp.github.com.ifrmr.MainActivity;
+import infrmr.newsapp.github.com.ifrmr.R;
 
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {

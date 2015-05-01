@@ -40,14 +40,14 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
+import infrmr.newsapp.github.com.ifrmr.settings.SettingsActivity;
+
 
 public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     /**
      * TODO
-     * - I had to change parent class from AppCompatActivity to ActionBarActivity, because I couldn't work
-     *   out how to return the ActionBar in NavigationDrawerFragment.getActionBar(); Crashes.
-     *
      * - If desired, auto refresh in onResume
      */
 
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     private static boolean mobileConnected = false;
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
-    List<TheVergeXmlParser.Entry> entries = null;
+    private List<TheVergeXmlParser.Entry> entries;
     // Reference for loading toast
     LoadToast loadToast;
     // The BroadcastReceiver that tracks network connectivity changes.
@@ -283,6 +283,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 
         // Iterate through array
         for (int i = 0; i < textViewIDs.length; i++) {
+            //TODO what is the use for making it final?
             final int finalI = i;
 
             TextView tv = (TextView) findViewById(textViewIDs[i]);
@@ -347,8 +348,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            //TODO may not be required
-//            actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setTitle(mTitle);
         }
@@ -403,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
             super.onPreExecute();
             //setContentView(R.layout.activity_main);
             TextView textView = (TextView) findViewById(R.id.textViewNews);
-            textView.setText("Loading Data...");
+            textView.setText(getString(R.string.loading));
             LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
             articleLayout.setVisibility(View.INVISIBLE);
         }

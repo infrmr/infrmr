@@ -24,7 +24,7 @@
 
         <!-- Settings Activity -->
         <activity
-            android:name=".SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:label="@string/settings_title" >
             <intent-filter>
                 <action android:name="android.intent.action.MANAGE_NETWORK_USAGE" />
@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ArticleActivity"
+            android:name=".article.ArticleActivity"
             android:label="@string/title_activity_article">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

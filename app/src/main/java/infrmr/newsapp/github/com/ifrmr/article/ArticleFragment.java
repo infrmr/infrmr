@@ -1,4 +1,4 @@
-package infrmr.newsapp.github.com.ifrmr;
+package infrmr.newsapp.github.com.ifrmr.article;
 
 
 import android.app.Fragment;
@@ -12,6 +12,8 @@ import android.webkit.WebView;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
+import infrmr.newsapp.github.com.ifrmr.R;
 
 
 public class ArticleFragment extends Fragment {
