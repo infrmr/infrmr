@@ -1,9 +1,11 @@
-package infrmr.newsapp.github.com.ifrmr;
+package infrmr.newsapp.github.com.ifrmr.article;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import infrmr.newsapp.github.com.ifrmr.R;
 
 /**
  * Activity which hosts the article Fragment

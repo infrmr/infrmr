@@ -1,4 +1,4 @@
-package infrmr.newsapp.github.com.ifrmr;
+package infrmr.newsapp.github.com.ifrmr.settings;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;

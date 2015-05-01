@@ -15,7 +15,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,34 +38,39 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
+
+import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
+import infrmr.newsapp.github.com.ifrmr.settings.SettingsActivity;
 
 
-public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     /**
      * TODO
-     * - I had to change parent class from AppCompatActivity to ActionBarActivity, because I couldn't work
-     *   out how to return the ActionBar in NavigationDrawerFragment.getActionBar(); Crashes.
-     *
      * - If desired, auto refresh in onResume
      */
 
+    public static final String PREF_CONNECTIVITY = "connectivityPref";
+    public static final String PREF_TOPIC = "topicPref";
     // For checking user network connection preference
-    public static final String WIFI = "Wi-Fi";
-    public static final String ANY = "Any";
+    public static final String PREF_CONNECTIVITY_WIFI = "Wi-Fi";
+    public static final String PREF_CONNECTIVITY_ANY = "Any";
+    public static final String DEFAULT_PREF_CONNECTIVITY = PREF_CONNECTIVITY_WIFI;
+    public static final String DEFAULT_PREF_TOPIC = "http://www.theverge.com/android/rss/index.xml";
     // Whether the display should be refreshed.
     public static boolean refreshDisplay = true;
     // The user's current network preference setting.
-    public static String sPref = null;
+    public static String connectivityPref = null;
     // Default RSS Feed before loading from preference
-    private static String URL = "http://www.theverge.com/android/rss/index.xml";
+    private static String topicPref = null;
     // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
     // Whether there is a mobile connection.
     private static boolean mobileConnected = false;
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
-    List<TheVergeXmlParser.Entry> entries = null;
+    private List<TheVergeXmlParser.Entry> entries;
     // Reference for loading toast
     LoadToast loadToast;
     // The BroadcastReceiver that tracks network connectivity changes.
@@ -104,7 +108,6 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         super.onResume();
 
         checkConnectionThenLoadPage();
-
     }
 
     /**
@@ -118,10 +121,10 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
         // Retrieves a string value for the preferences. The second parameter
         // is the default value to use if a preference value is not found.
-        sPref = sharedPrefs.getString("listPref", "Wi-Fi");
+        connectivityPref = sharedPrefs.getString(PREF_CONNECTIVITY, DEFAULT_PREF_CONNECTIVITY);
 
         // Retrieves the users preference for news topic
-        URL = sharedPrefs.getString("topicPref", "http://www.theverge.com/android/rss/index.xml");
+        topicPref = sharedPrefs.getString(PREF_TOPIC, DEFAULT_PREF_TOPIC);
 
         // Check internet connection
         updateConnectedFlags();
@@ -171,18 +174,19 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
         // Retrieves a string value for the preferences. The second parameter
         // is the default value to use if a preference value is not found.
-        sPref = sharedPrefs.getString("listPref", "Wi-Fi");
+        connectivityPref = sharedPrefs.getString(PREF_CONNECTIVITY, "Wi-Fi");
 
         // CHeck internet connection
         updateConnectedFlags();
 
-        if (((sPref.equals(ANY)) && (wifiConnected || mobileConnected))
-                || ((sPref.equals(WIFI)) && (wifiConnected))) {
-            new DownloadXmlTask().execute(URL);
+        if (((connectivityPref.equals(PREF_CONNECTIVITY_ANY)) && (wifiConnected || mobileConnected))
+                || ((connectivityPref.equals(PREF_CONNECTIVITY_WIFI)) && (wifiConnected))) {
+            new DownloadXmlTask().execute(topicPref);
             loadToast = new LoadToast(this);
-            loadToast.setText("Loading News...");
+            loadToast.setText(getString(R.string.loading_news));
             loadToast.show();
         } else {
+            //TODO avoid toasts! Have a look at Croutons
             Toast.makeText(getApplicationContext(), "Unable to load content. Check your network " +
                     "connection and try again.", Toast.LENGTH_SHORT).show();
         }
@@ -273,11 +277,13 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
      */
     private void setArticleData() {
         // Create array of TextView references
+        //TODO this is not extensible!
         int[] textViewIDs = new int[]{R.id.article1, R.id.article2, R.id.article3, R.id.article4,
                 R.id.article5, R.id.article6, R.id.article7, R.id.article8, R.id.article9, R.id.article10};
 
         // Iterate through array
         for (int i = 0; i < textViewIDs.length; i++) {
+            //TODO what is the use for making it final?
             final int finalI = i;
 
             TextView tv = (TextView) findViewById(textViewIDs[i]);
@@ -303,7 +309,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         StringBuilder newsString = new StringBuilder();
         // Use these to get time
         Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
+        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa", Locale.ENGLISH);
         // Build title string
         newsString.append(getResources().getString(R.string.page_title)).append("\n\n");
         newsString.append(getResources().getString(R.string.updated)).append(" ").append(formatter.format(rightNow.getTime()));
@@ -321,7 +327,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
+                .replace(R.id.container, SectionFragment.newInstance(position + 1))
                 .commit();
     }
 
@@ -341,8 +347,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
-        if (null != actionBar) {
-            actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        if (actionBar != null) {
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setTitle(mTitle);
         }
@@ -351,22 +356,22 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment {
+    public static class SectionFragment extends Fragment {
         /**
          * The fragment argument representing the section number for this
          * fragment.
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
-        public PlaceholderFragment() {
+        public SectionFragment() {
         }
 
         /**
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
+        public static SectionFragment newInstance(int sectionNumber) {
+            SectionFragment fragment = new SectionFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
@@ -387,7 +392,9 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         }
     }
 
-    // Implementation of AsyncTask used to download XML feed from TheVerge.com.
+    /**
+     * Implementation of AsyncTask used to download XML feed from TheVerge.com.
+     */
     private class DownloadXmlTask extends AsyncTask<String, Void, String> {
 
         @Override
@@ -395,7 +402,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
             super.onPreExecute();
             //setContentView(R.layout.activity_main);
             TextView textView = (TextView) findViewById(R.id.textViewNews);
-            textView.setText("Loading Data...");
+            textView.setText(getString(R.string.loading));
             LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
             articleLayout.setVisibility(View.INVISIBLE);
         }
@@ -451,7 +458,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
             // whether
             // to refresh the display or keep the current display.
             // If the userpref is Wi-Fi only, checks to see if the device has a Wi-Fi connection.
-            if (WIFI.equals(sPref) && networkInfo != null
+            if (PREF_CONNECTIVITY_WIFI.equals(connectivityPref) && networkInfo != null
                     && networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                 // If device has its Wi-Fi connection, sets refreshDisplay
                 // to true. This causes the display to be refreshed when the user
@@ -461,7 +468,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
                 // If the setting is ANY network and there is a network connection
                 // (which by process of elimination would be mobile), sets refreshDisplay to true.
-            } else if (ANY.equals(sPref) && networkInfo != null) {
+            } else if (PREF_CONNECTIVITY_ANY.equals(connectivityPref) && networkInfo != null) {
                 refreshDisplay = true;
 
                 // Otherwise, the app can't download content--either because there is no network
@@ -474,6 +481,4 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
             }
         }
     }
-
-
 }
