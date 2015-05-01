@@ -11,13 +11,13 @@
             android:entryValues="@array/listValuesTopic" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/preference_category_network">
-        <!-- Choice of downloading only on wifi -->
+        <!-- Choice of downloading only on wifi
         <ListPreference
             android:title="Download Feed"
             android:summary="Network connectivity required to download the feed."
-            android:key="listPref"
+            android:key="connectivityPref"
             android:defaultValue="Any"
             android:entries="@array/listArrayNetwork"
-            android:entryValues="@array/listValuesNetwork" />
+            android:entryValues="@array/listValuesNetwork" />  -->
     </PreferenceCategory>
 </PreferenceScreen>

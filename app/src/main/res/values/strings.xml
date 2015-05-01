@@ -4,8 +4,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="page_title">The Verge Articles </string>
     <string name="updated">Last updated:</string>
-    <string name="lost_connection">Lost connection.</string>
-    <string name="wifi_connected">Wi-Fi reconnected.</string>
+    <string name="no_connection">No internet connection.</string>
     <string name="connection_error">Unable to load content. Check your network connection.</string>
     <string name="connection_timeout">Connection timeout. Check your network connection and try again.</string>
     <string name="xml_error">Error parsing XML.</string>

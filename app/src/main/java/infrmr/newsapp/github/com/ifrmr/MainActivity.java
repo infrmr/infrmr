@@ -24,7 +24,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
@@ -40,6 +39,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import de.keyboardsurfer.android.widget.crouton.Crouton;
+import de.keyboardsurfer.android.widget.crouton.Style;
 import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
 import infrmr.newsapp.github.com.ifrmr.settings.SettingsActivity;
 
@@ -48,15 +49,11 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 
     /**
      * TODO
-     * - If desired, auto refresh in onResume
+     * - If desired, auto refresh in onResume (Or Nav Fragments onItemSelected method)
      */
 
-    public static final String PREF_CONNECTIVITY = "connectivityPref";
     public static final String PREF_TOPIC = "topicPref";
     // For checking user network connection preference
-    public static final String PREF_CONNECTIVITY_WIFI = "Wi-Fi";
-    public static final String PREF_CONNECTIVITY_ANY = "Any";
-    public static final String DEFAULT_PREF_CONNECTIVITY = PREF_CONNECTIVITY_WIFI;
     public static final String DEFAULT_PREF_TOPIC = "http://www.theverge.com/android/rss/index.xml";
     // Whether the display should be refreshed.
     public static boolean refreshDisplay = true;
@@ -119,10 +116,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         // Gets the user's network preference settings
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Retrieves a string value for the preferences. The second parameter
-        // is the default value to use if a preference value is not found.
-        connectivityPref = sharedPrefs.getString(PREF_CONNECTIVITY, DEFAULT_PREF_CONNECTIVITY);
-
         // Retrieves the users preference for news topic
         topicPref = sharedPrefs.getString(PREF_TOPIC, DEFAULT_PREF_TOPIC);
 
@@ -142,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Crouton.cancelAllCroutons();
         if (receiver != null) {
             this.unregisterReceiver(receiver);
         }
@@ -169,26 +163,16 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
      */
     public void loadPage() {
 
-        // Gets the user's network preference settings
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // Retrieves a string value for the preferences. The second parameter
-        // is the default value to use if a preference value is not found.
-        connectivityPref = sharedPrefs.getString(PREF_CONNECTIVITY, "Wi-Fi");
-
-        // CHeck internet connection
+        // Check internet connection
         updateConnectedFlags();
 
-        if (((connectivityPref.equals(PREF_CONNECTIVITY_ANY)) && (wifiConnected || mobileConnected))
-                || ((connectivityPref.equals(PREF_CONNECTIVITY_WIFI)) && (wifiConnected))) {
+        if (wifiConnected || mobileConnected) {
             new DownloadXmlTask().execute(topicPref);
             loadToast = new LoadToast(this);
             loadToast.setText(getString(R.string.loading_news));
             loadToast.show();
         } else {
-            //TODO avoid toasts! Have a look at Croutons
-            Toast.makeText(getApplicationContext(), "Unable to load content. Check your network " +
-                    "connection and try again.", Toast.LENGTH_SHORT).show();
+            Crouton.makeText(MainActivity.this, R.string.no_connection, Style.INFO).show();
         }
     }
 
@@ -334,13 +318,13 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     public void onSectionAttached(int number) {
         switch (number) {
             case 1:
-                mTitle = getString(R.string.title_section1);
+                mTitle = getResources().getStringArray(R.array.title_sections)[0];
                 break;
             case 2:
-                mTitle = getString(R.string.title_section2);
+                mTitle = getResources().getStringArray(R.array.title_sections)[1];
                 break;
             case 3:
-                mTitle = getString(R.string.title_section3);
+                mTitle = getResources().getStringArray(R.array.title_sections)[2];
                 break;
         }
     }
@@ -433,12 +417,10 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
                 // Or this method if it failed
                 loadToast.error();
                 Log.i(TAG, "Post Execute - entries 0 / null");
-                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+                Crouton.makeText(MainActivity.this, result, Style.INFO).show();
             }
         }
     }
-
-    // Fragment
 
     /**
      * This BroadcastReceiver intercepts the android.net.ConnectivityManager.CONNECTIVITY_ACTION,
@@ -454,30 +436,18 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
                     (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
-            // Checks the user prefs and the network connection. Based on the result, decides
-            // whether
-            // to refresh the display or keep the current display.
-            // If the userpref is Wi-Fi only, checks to see if the device has a Wi-Fi connection.
-            if (PREF_CONNECTIVITY_WIFI.equals(connectivityPref) && networkInfo != null
-                    && networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
-                // If device has its Wi-Fi connection, sets refreshDisplay
-                // to true. This causes the display to be refreshed when the user
-                // returns to the app.
-                refreshDisplay = true;
-                Toast.makeText(context, R.string.wifi_connected, Toast.LENGTH_SHORT).show();
-
-                // If the setting is ANY network and there is a network connection
-                // (which by process of elimination would be mobile), sets refreshDisplay to true.
-            } else if (PREF_CONNECTIVITY_ANY.equals(connectivityPref) && networkInfo != null) {
+            // Checks the network connection. Based on the result, decides
+            // whether to refresh the display or keep the current display.
+            if (networkInfo != null) {
+                // If device has a network connection, sets refreshDisplay
+                // to true. This allows the display to be refreshed upon next attempt.
                 refreshDisplay = true;
 
-                // Otherwise, the app can't download content--either because there is no network
-                // connection (mobile or Wi-Fi), or because the pref setting is WIFI, and there
-                // is no Wi-Fi connection.
-                // Sets refreshDisplay to false.
+                // Otherwise, the app can't download content due to no network
+                // connection (mobile or Wi-Fi). Sets refreshDisplay to false.
             } else {
                 refreshDisplay = false;
-                Toast.makeText(context, R.string.lost_connection, Toast.LENGTH_SHORT).show();
+                Crouton.makeText(MainActivity.this, R.string.no_connection, Style.INFO).show();
             }
         }
     }
