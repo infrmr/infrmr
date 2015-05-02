@@ -1,6 +1,7 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -10,13 +11,11 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-
-import java.util.ArrayList;
-
-import infrmr.newsapp.github.com.ifrmr.dummy.DummyContent;
+import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
 
 /**
  * A fragment representing a list of Items.
@@ -49,46 +48,67 @@ public class ArticleListFragment extends Fragment implements AbsListView.Recycle
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     /**
+     * Boolean to detect whether the fragment is still visable
+     */
+    public static boolean isVisable;
+
+    /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
     public ArticleListFragment() {
     }
 
-    ArrayList<TheVergeXmlParser.Entry> arrayList;
-    // todo - REMOVE THIS< PUT IT IN ONCREATE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        arrayList = new ArrayList<TheVergeXmlParser.Entry>();
+        mAdapter = new ArticleArrayAdapter(getActivity().getApplicationContext());
 
-        mAdapter = new ArrayAdapter<TheVergeXmlParser.Entry>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, arrayList);
+       // mAdapter = new ArrayAdapter<String>(getActivity(),
+        //        R.layout.drawer_list_item, android.R.id.text1, MainActivity.articleList);
 
-        /* TODO: Change Adapter to display your content
-        mAdapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS); */
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_article_display, container, false);
 
-        Log.i("ERR", "Adapter: " + mAdapter);
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
+        mListView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
-        //todo mListView.setOnItemClickListener(this);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                Intent intent = new Intent(getActivity().getApplicationContext(), ArticleActivity.class);
+                TheVergeXmlParser.Entry article = MainActivity.entries.get(position);
+                intent.putExtra("title", article.title);
+                intent.putExtra("content", article.content);
+                intent.putExtra("link", article.link);
+                startActivity(intent);
+            }
+        });
 
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        isVisable = true;
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        isVisable = false;
+    }
 
     /**
      * Returns a new instance of this fragment for the given section
@@ -103,7 +123,7 @@ public class ArticleListFragment extends Fragment implements AbsListView.Recycle
     }
 
     /**
-     *  for replacing todo  return position???
+     *  for replacing
      * @return
      */
     public static ArticleListFragment newInstance() {

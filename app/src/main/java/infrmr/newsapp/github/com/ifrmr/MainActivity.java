@@ -22,7 +22,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import net.steamcrafted.loadtoast.LoadToast;
@@ -42,8 +41,6 @@ import java.util.Locale;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
-import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
-import infrmr.newsapp.github.com.ifrmr.dummy.DummyContent;
 import infrmr.newsapp.github.com.ifrmr.settings.SettingsActivity;
 
 
@@ -52,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     /**
      * TODO
      * - If desired, auto refresh in onResume (Or Nav Fragments onItemSelected method)
+     * -
      */
 
     public static final String PREF_TOPIC = "topicPref";
@@ -80,13 +78,11 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     // Used to store the last screen title. For use in ActionBar.
     private CharSequence mTitle;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // init entries test todo
-        List<TheVergeXmlParser.Entry> entries = new ArrayList<TheVergeXmlParser.Entry>();
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.my_navigation_drawer);
@@ -112,6 +108,12 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         checkConnectionThenLoadPage();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        loadToast.error();
+    }
+
     /**
      * Method which gets the users current network status, compares to users network preference,
      * then calls the loadPage() method if desired.
@@ -133,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         // you don't want to refresh the display--this would force the display of
         // an error page instead of TheVerge.com content.
         if (refreshDisplay) {
-            // TODO - loadPage();
+            loadPage();
         }
     }
 
@@ -252,41 +254,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
      * Method for updating the TextViews with article information.
      */
     private void updateArticles() {
-
-        // Show hidden layout
-        LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
-        articleLayout.setVisibility(View.VISIBLE);
-
-        setTitleString();
-        setArticleData();
-    }
-
-    /**
-     * Iterate through TextView's, setting title and onClickListener for each.
-     */
-    private void setArticleData() {
-        // Create array of TextView references
-        //TODO this is not extensible!
-        int[] textViewIDs = new int[]{R.id.article1, R.id.article2, R.id.article3, R.id.article4,
-                R.id.article5, R.id.article6, R.id.article7, R.id.article8, R.id.article9, R.id.article10};
-
-        // Iterate through array
-        for (int i = 0; i < textViewIDs.length; i++) {
-            //TODO what is the use for making it final?
-            final int finalI = i;
-
-            TextView tv = (TextView) findViewById(textViewIDs[i]);
-            tv.setText(entries.get(i).title);
-            tv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
-                    intent.putExtra("title", entries.get(finalI).title);
-                    intent.putExtra("content", entries.get(finalI).content);
-                    intent.putExtra("link", entries.get(finalI).link);
-                    startActivity(intent);
-                }
-            });
+        ArticleArrayAdapter.articles.clear();
+        for (int i = 0; i < entries.size(); i++) {
+            ArticleArrayAdapter.articles.add(entries.get(i));
         }
     }
 
@@ -316,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, ArticleListFragment.newInstance(position + 1)).commit(); // todo SectionFragment
+                .replace(R.id.container, ArticleListFragment.newInstance(position + 1)).commit();
 
     }
 
@@ -347,59 +317,11 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         //  nothing
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class SectionFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public SectionFragment() {
-        }
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static SectionFragment newInstance(int sectionNumber) {
-            SectionFragment fragment = new SectionFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_main, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
-        }
-    }
 
     /**
      * Implementation of AsyncTask used to download XML feed from TheVerge.com.
      */
     private class DownloadXmlTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            //setContentView(R.layout.activity_main);
-            //todo-remove TextView textView = (TextView) findViewById(R.id.textViewNews);
-            //todo-remove textView.setText(getString(R.string.loading));
-            //todo-remove LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
-            //todo-remove articleLayout.setVisibility(View.INVISIBLE);
-        }
 
         @Override
         protected String doInBackground(String... urls) {
@@ -416,29 +338,27 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         @Override
         protected void onPostExecute(String result) {
             /**
-             * If successful, update UI with article information, else show error message.
+             * If successful and still in view, update UI with article information, else show error message.
              */
-            if (entries != null && entries.size() > 0) {
-                Log.i(TAG, "Post Execute - entries: " + entries.size());
-                //todo-remove updateArticles();
-                // Test
-                DummyContent.DummyItem d = new DummyContent.DummyItem("0", "Entry");
-                DummyContent.ITEMS.add(d);
-                DummyContent.DummyItem d2 = new DummyContent.DummyItem("0", "sommTHANG");
-                DummyContent.ITEMS.add(d2);
 
-                // Show new Fragment
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction()
-                        .replace(R.id.container, ArticleListFragment.newInstance()).commit();
+            if (ArticleListFragment.isVisable) {
+                if (entries != null && entries.size() > 0) {
+                    updateArticles();
+                    // Show new Fragment
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    fragmentManager.beginTransaction()
+                            .replace(R.id.container, ArticleListFragment.newInstance()).commit();
 
-                // Call this if it was successful
-                loadToast.success();
+                    // Call this if it was successful
+                    loadToast.success();
+                } else {
+                    // Or this method if it failed
+                    loadToast.error();
+                    Log.i(TAG, "Post Execute - entries 0 / null");
+                    Crouton.makeText(MainActivity.this, result, Style.INFO).show();
+                }
             } else {
-                // Or this method if it failed
-                loadToast.error();
-                Log.i(TAG, "Post Execute - entries 0 / null");
-                Crouton.makeText(MainActivity.this, result, Style.INFO).show();
+                Log.i(TAG, "VIEW NOT VISABLE");
             }
         }
     }
