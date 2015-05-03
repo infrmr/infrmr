@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     /**
      * TODO
      * - If desired, auto refresh in onResume (Or Nav Fragments onItemSelected method)
-     * -
+     * - Only refresh when needed (not in every onResume)
+     * - Search for <a> + <i> tags in content & remove
      */
 
     public static final String PREF_TOPIC = "topicPref";
@@ -175,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 
         if (wifiConnected || mobileConnected) {
             new DownloadXmlTask().execute(topicPref);
+            // Show loading toast & clear adapter
             loadToast = new LoadToast(this);
             loadToast.setText(getString(R.string.loading_news));
             loadToast.show();
