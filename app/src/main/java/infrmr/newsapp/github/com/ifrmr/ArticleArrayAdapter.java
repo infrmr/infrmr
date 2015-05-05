@@ -1,6 +1,7 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 import android.content.Context;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,7 +50,7 @@ public class ArticleArrayAdapter extends BaseAdapter {
             holder = new ViewHolder();
 
             // Inflate view
-            convertView = inflater.inflate(R.layout.article_list_item, null); // todo - or parent
+            convertView = inflater.inflate(R.layout.article_list_item, null); // todo - Why does this crash with 'parent' ?
 
             // Reference TextViews
             holder.title = (TextView) convertView.findViewById(R.id.textViewTitle);
@@ -71,25 +72,10 @@ public class ArticleArrayAdapter extends BaseAdapter {
     }
 
     private String formatContentFromHtml(String content) {
+        // Uses Html class and TagSoup to extract text from Html
 
-        StringBuilder newString = new StringBuilder();
-
-        Log.i("DEBUG", "<p occurs: " + content.indexOf("<p"));
-        Log.i("DEBUG", "</p occurs: " + content.lastIndexOf("</p"));
-        int j, k;
-        j = content.indexOf("<p");
-        k = content.indexOf("</p");
-
-        if (j + k <= content.length()) {
-            newString.append(content.substring(content.indexOf("<p"), content.indexOf("</p")));
-        } else {
-            newString.append("Error during substring operation // start: " + j + "  /  end: " + k + "  /  length: " + content.length());
-        }
-
-        Log.i("DEBUG", newString.toString());
-
-        return content.substring(content.indexOf("<p"), content.indexOf("</p"));
-        //return newString.toString();
+        Log.i("html", "SHOW: " + Html.fromHtml(content).toString());
+        return Html.fromHtml(content).toString();
     }
 
     /**

@@ -66,7 +66,7 @@ public class ArticleListFragment extends Fragment implements AbsListView.Recycle
 
         mAdapter = new ArticleArrayAdapter(getActivity().getApplicationContext());
 
-       // mAdapter = new ArrayAdapter<String>(getActivity(),
+        // mAdapter = new ArrayAdapter<String>(getActivity(),
         //        R.layout.drawer_list_item, android.R.id.text1, MainActivity.articleList);
 
     }
