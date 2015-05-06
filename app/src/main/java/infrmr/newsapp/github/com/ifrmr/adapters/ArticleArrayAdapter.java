@@ -1,4 +1,4 @@
-package infrmr.newsapp.github.com.ifrmr;
+package infrmr.newsapp.github.com.ifrmr.adapters;
 
 import android.content.Context;
 import android.text.Html;
@@ -10,6 +10,9 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import infrmr.newsapp.github.com.ifrmr.R;
+import infrmr.newsapp.github.com.ifrmr.TheVergeXmlParser;
 
 public class ArticleArrayAdapter extends BaseAdapter {
 

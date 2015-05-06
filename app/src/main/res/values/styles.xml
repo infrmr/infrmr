@@ -6,10 +6,9 @@
     </style>
 
     <!-- TODO: Re-enable Theme Base: "style/Theme.AppCompat.Light.NoActionBar" -->
-	<style name="AppTheme.Base" parent="style/Theme.AppCompat.Light">
+	<style name="AppTheme.Base" parent="style/Theme.AppCompat.Light.NoActionBar">
 		<item name="colorPrimary">@color/colorPrimary</item>
 		<item name="colorPrimaryDark">@color/colorPrimaryDark</item>
 		<item name="colorAccent">@color/colorAccent</item>
 	</style>
-
 </resources>
