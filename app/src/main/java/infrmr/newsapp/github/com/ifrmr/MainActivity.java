@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 
     /**
      * TODO
+     * - Set drawable background for cardViews like in Lead-Feed
      * - If desired, auto refresh in onResume (Or Nav Fragments onItemSelected method)
      * - Only refresh when needed (not in every onResume)
      * - Search for <a> + <i> tags in content & remove
@@ -262,22 +263,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         }
     }
 
-    /**
-     * Helper method which returns title string & last updated text
-     */
-    private void setTitleString() {
-        // Get title String
-        StringBuilder newsString = new StringBuilder();
-        // Use these to get time
-        Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa", Locale.ENGLISH);
-        // Build title string
-        newsString.append(getResources().getString(R.string.page_title)).append("\n\n");
-        newsString.append(getResources().getString(R.string.updated)).append(" ").append(formatter.format(rightNow.getTime()));
-        // Get reference to title TextView, then set text
-        TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
-        textViewNews.setText(newsString);
-    }
 
     /**
      * NavigationDrawer methods below
@@ -290,20 +275,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         fragmentManager.beginTransaction()
                 .replace(R.id.container, ArticleListFragment.newInstance(position + 1)).commit();
 
-    }
-
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getResources().getStringArray(R.array.title_sections)[0];
-                break;
-            case 2:
-                mTitle = getResources().getStringArray(R.array.title_sections)[1];
-                break;
-            case 3:
-                mTitle = getResources().getStringArray(R.array.title_sections)[2];
-                break;
-        }
     }
 
     public void restoreActionBar() {

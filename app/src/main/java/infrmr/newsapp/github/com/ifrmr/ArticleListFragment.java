@@ -64,14 +64,9 @@ public class ArticleListFragment extends Fragment implements AbsListView.Recycle
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new ArticleArrayAdapter(getActivity().getApplicationContext());
-
-        // mAdapter = new ArrayAdapter<String>(getActivity(),
-        //        R.layout.drawer_list_item, android.R.id.text1, MainActivity.articleList);
+        mAdapter = new ArticleArrayAdapter(getActivity());
 
     }
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -82,7 +77,10 @@ public class ArticleListFragment extends Fragment implements AbsListView.Recycle
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
 
-        // Set OnItemClickListener so we can be notified on item clicks
+        /**
+         * ToDo: This needs to be changed to a cardview listener, atm a touch between two cards launches the articles
+         */
+        /* Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -93,7 +91,7 @@ public class ArticleListFragment extends Fragment implements AbsListView.Recycle
                 intent.putExtra("link", article.link);
                 startActivity(intent);
             }
-        });
+        }); */
 
         return view;
     }
