@@ -1,6 +1,5 @@
 package infrmr.newsapp.github.com.ifrmr;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,18 +10,13 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
@@ -32,12 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
@@ -51,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
      * - Set drawable background for cardViews like in Lead-Feed
      * - If desired, auto refresh in onResume (Or Nav Fragments onItemSelected method)
      * - Only refresh when needed (not in every onResume)
-     * - Search for <a> + <i> tags in content & remove
+     * - RecycleView Gridview columns
      */
 
     public static final String PREF_TOPIC = "topicPref";
@@ -59,8 +48,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     public static final String DEFAULT_PREF_TOPIC = "http://www.theverge.com/android/rss/index.xml";
     // Whether the display should be refreshed.
     public static boolean refreshDisplay = true;
-    // The user's current network preference setting.
-    public static String connectivityPref = null;
     // Default RSS Feed before loading from preference
     private static String topicPref = null;
     // Whether there is a Wi-Fi connection.
@@ -113,7 +100,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     @Override
     protected void onPause() {
         super.onPause();
-        loadToast.error();
+        if (this.hasWindowFocus()) {
+            loadToast.error();
+        }
     }
 
     /**
@@ -223,6 +212,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         String title = null;
         String url = null;
         String content = null;
+        String updated = null;
 
         try {
             stream = downloadUrl(urlString);
@@ -257,9 +247,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
      * Method for updating the TextViews with article information.
      */
     private void updateArticles() {
-        ArticleArrayAdapter.articles.clear();
+        RecyclerAdapter.articles.clear();
         for (int i = 0; i < entries.size(); i++) {
-            ArticleArrayAdapter.articles.add(entries.get(i));
+            RecyclerAdapter.articles.add(entries.get(i));
         }
     }
 
@@ -286,8 +276,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     }
 
     @Override
-    public void onFragmentInteraction(String id) {
-        //  nothing
+    public void onFragmentInteraction(int position) {
+        // The user selected the headline of an article from the HeadlinesFragment
+        // Do something here to display that article
     }
 
 

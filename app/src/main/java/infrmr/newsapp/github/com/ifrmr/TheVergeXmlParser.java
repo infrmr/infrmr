@@ -58,12 +58,14 @@ public class TheVergeXmlParser {
         public final String title;
         public final String link;
         public final String content;
+        public final String updated;
 
 
-        private Entry(String title, String link, String content) {
+        private Entry(String title, String link, String content, String updated) {
             this.title = title;
             this.link = link;
             this.content = content;
+            this.updated = updated;
         }
     }
 
@@ -75,6 +77,7 @@ public class TheVergeXmlParser {
         String title = null;
         String link = null;
         String content = null;
+        String updated = null;
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.getEventType() != XmlPullParser.START_TAG) {
                 continue;
@@ -90,11 +93,21 @@ public class TheVergeXmlParser {
                 case ("content"):
                     content = readContent(parser);
                     break;
+                case ("updated"):
+                    updated = readDate(parser);
+                    break;
                 default:
                     skip(parser);
             }
         }
-        return new Entry(title, link, content);
+        return new Entry(title, link, content, updated);
+    }
+
+    private String readDate(XmlPullParser parser) throws IOException, XmlPullParserException {
+        parser.require(XmlPullParser.START_TAG, ns, "updated");
+        String updated = readText(parser);
+        parser.require(XmlPullParser.END_TAG, ns, "updated");
+        return updated;
     }
 
     // Processes title tags in the feed.
