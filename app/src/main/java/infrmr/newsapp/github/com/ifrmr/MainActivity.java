@@ -1,6 +1,5 @@
 package infrmr.newsapp.github.com.ifrmr;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,19 +10,13 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
@@ -33,23 +26,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
-import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
 import infrmr.newsapp.github.com.ifrmr.settings.SettingsActivity;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks, ArticleListFragment.OnFragmentInteractionListener {
 
     /**
      * TODO
+     * - Set drawable background for cardViews like in Lead-Feed
      * - If desired, auto refresh in onResume (Or Nav Fragments onItemSelected method)
+     * - Only refresh when needed (not in every onResume)
+     * - RecycleView Gridview columns
      */
 
     public static final String PREF_TOPIC = "topicPref";
@@ -57,8 +48,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     public static final String DEFAULT_PREF_TOPIC = "http://www.theverge.com/android/rss/index.xml";
     // Whether the display should be refreshed.
     public static boolean refreshDisplay = true;
-    // The user's current network preference setting.
-    public static String connectivityPref = null;
     // Default RSS Feed before loading from preference
     private static String topicPref = null;
     // Whether there is a Wi-Fi connection.
@@ -67,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     private static boolean mobileConnected = false;
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
-    private List<TheVergeXmlParser.Entry> entries;
+    public static List<TheVergeXmlParser.Entry> entries;
     // Reference for loading toast
     LoadToast loadToast;
     // The BroadcastReceiver that tracks network connectivity changes.
@@ -77,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     private NavigationDrawerFragment mNavigationDrawerFragment;
     // Used to store the last screen title. For use in ActionBar.
     private CharSequence mTitle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +95,14 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         super.onResume();
 
         checkConnectionThenLoadPage();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (this.hasWindowFocus()) {
+            loadToast.error();
+        }
     }
 
     /**
@@ -168,6 +166,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 
         if (wifiConnected || mobileConnected) {
             new DownloadXmlTask().execute(topicPref);
+            // Show loading toast & clear adapter
             loadToast = new LoadToast(this);
             loadToast.setText(getString(R.string.loading_news));
             loadToast.show();
@@ -213,6 +212,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         String title = null;
         String url = null;
         String content = null;
+        String updated = null;
 
         try {
             stream = downloadUrl(urlString);
@@ -247,60 +247,12 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
      * Method for updating the TextViews with article information.
      */
     private void updateArticles() {
-
-        // Show hidden layout
-        LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
-        articleLayout.setVisibility(View.VISIBLE);
-
-        setTitleString();
-        setArticleData();
-    }
-
-    /**
-     * Iterate through TextView's, setting title and onClickListener for each.
-     */
-    private void setArticleData() {
-        // Create array of TextView references
-        //TODO this is not extensible!
-        int[] textViewIDs = new int[]{R.id.article1, R.id.article2, R.id.article3, R.id.article4,
-                R.id.article5, R.id.article6, R.id.article7, R.id.article8, R.id.article9, R.id.article10};
-
-        // Iterate through array
-        for (int i = 0; i < textViewIDs.length; i++) {
-            //TODO what is the use for making it final?
-            final int finalI = i;
-
-            TextView tv = (TextView) findViewById(textViewIDs[i]);
-            tv.setText(entries.get(i).title);
-            tv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
-                    intent.putExtra("title", entries.get(finalI).title);
-                    intent.putExtra("content", entries.get(finalI).content);
-                    intent.putExtra("link", entries.get(finalI).link);
-                    startActivity(intent);
-                }
-            });
+        RecyclerAdapter.articles.clear();
+        for (int i = 0; i < entries.size(); i++) {
+            RecyclerAdapter.articles.add(entries.get(i));
         }
     }
 
-    /**
-     * Helper method which returns title string & last updated text
-     */
-    private void setTitleString() {
-        // Get title String
-        StringBuilder newsString = new StringBuilder();
-        // Use these to get time
-        Calendar rightNow = Calendar.getInstance();
-        DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa", Locale.ENGLISH);
-        // Build title string
-        newsString.append(getResources().getString(R.string.page_title)).append("\n\n");
-        newsString.append(getResources().getString(R.string.updated)).append(" ").append(formatter.format(rightNow.getTime()));
-        // Get reference to title TextView, then set text
-        TextView textViewNews = (TextView) findViewById(R.id.textViewNews);
-        textViewNews.setText(newsString);
-    }
 
     /**
      * NavigationDrawer methods below
@@ -311,22 +263,8 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, SectionFragment.newInstance(position + 1))
-                .commit();
-    }
+                .replace(R.id.container, ArticleListFragment.newInstance(position + 1)).commit();
 
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getResources().getStringArray(R.array.title_sections)[0];
-                break;
-            case 2:
-                mTitle = getResources().getStringArray(R.array.title_sections)[1];
-                break;
-            case 3:
-                mTitle = getResources().getStringArray(R.array.title_sections)[2];
-                break;
-        }
     }
 
     public void restoreActionBar() {
@@ -337,59 +275,17 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         }
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class SectionFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public SectionFragment() {
-        }
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static SectionFragment newInstance(int sectionNumber) {
-            SectionFragment fragment = new SectionFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_main, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
-        }
+    @Override
+    public void onFragmentInteraction(int position) {
+        // The user selected the headline of an article from the HeadlinesFragment
+        // Do something here to display that article
     }
+
 
     /**
      * Implementation of AsyncTask used to download XML feed from TheVerge.com.
      */
     private class DownloadXmlTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            //setContentView(R.layout.activity_main);
-            TextView textView = (TextView) findViewById(R.id.textViewNews);
-            textView.setText(getString(R.string.loading));
-            LinearLayout articleLayout = (LinearLayout) findViewById(R.id.linearLayoutNews);
-            articleLayout.setVisibility(View.INVISIBLE);
-        }
 
         @Override
         protected String doInBackground(String... urls) {
@@ -406,18 +302,27 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         @Override
         protected void onPostExecute(String result) {
             /**
-             * If successful, update UI with article information, else show error message.
+             * If successful and still in view, update UI with article information, else show error message.
              */
-            if (entries != null && entries.size() > 0) {
-                Log.i(TAG, "Post Execute - entries: " + entries.size());
-                updateArticles();
-                // Call this if it was successful
-                loadToast.success();
+
+            if (ArticleListFragment.isVisable) {
+                if (entries != null && entries.size() > 0) {
+                    updateArticles();
+                    // Show new Fragment
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    fragmentManager.beginTransaction()
+                            .replace(R.id.container, ArticleListFragment.newInstance()).commit();
+
+                    // Call this if it was successful
+                    loadToast.success();
+                } else {
+                    // Or this method if it failed
+                    loadToast.error();
+                    Log.i(TAG, "Post Execute - entries 0 / null");
+                    Crouton.makeText(MainActivity.this, result, Style.INFO).show();
+                }
             } else {
-                // Or this method if it failed
-                loadToast.error();
-                Log.i(TAG, "Post Execute - entries 0 / null");
-                Crouton.makeText(MainActivity.this, result, Style.INFO).show();
+                Log.i(TAG, "VIEW NOT VISABLE");
             }
         }
     }
