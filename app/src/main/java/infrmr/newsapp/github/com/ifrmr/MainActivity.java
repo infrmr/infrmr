@@ -62,8 +62,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
 
-    // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-    private NavigationDrawerFragment mNavigationDrawerFragment;
     // Used to store the last screen title. For use in ActionBar.
     private CharSequence mTitle;
 
@@ -73,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
+        NavigationDrawerFragment mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.my_navigation_drawer);
         mTitle = getTitle();
 
@@ -95,14 +93,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         super.onResume();
 
         checkConnectionThenLoadPage();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (this.hasWindowFocus()) {
-            loadToast.error();
-        }
     }
 
     /**
@@ -166,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 
         if (wifiConnected || mobileConnected) {
             new DownloadXmlTask().execute(topicPref);
-            // Show loading toast & clear adapter
+            // Show loading toast
             loadToast = new LoadToast(this);
             loadToast.setText(getString(R.string.loading_news));
             loadToast.show();
@@ -209,11 +199,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         InputStream stream = null;
         TheVergeXmlParser vergeXmlParser = new TheVergeXmlParser();
 
-        String title = null;
-        String url = null;
-        String content = null;
-        String updated = null;
-
         try {
             stream = downloadUrl(urlString);
             entries = vergeXmlParser.parse(stream);
@@ -244,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
     }
 
     /**
-     * Method for updating the TextViews with article information.
+     * Clear Adapter Array and update with new articles
      */
     private void updateArticles() {
         RecyclerAdapter.articles.clear();
@@ -253,11 +238,9 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         }
     }
 
-
     /**
-     * NavigationDrawer methods below
+     * Method callback for Nav Drawer selection
      */
-
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
@@ -299,13 +282,13 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
             }
         }
 
+        /**
+         * If successful and still in view, update UI with article information, else show error message.
+         */
         @Override
         protected void onPostExecute(String result) {
-            /**
-             * If successful and still in view, update UI with article information, else show error message.
-             */
 
-            if (ArticleListFragment.isVisable) {
+            if (ArticleListFragment.isVisible) {
                 if (entries != null && entries.size() > 0) {
                     updateArticles();
                     // Show new Fragment
@@ -322,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
                     Crouton.makeText(MainActivity.this, result, Style.INFO).show();
                 }
             } else {
+                loadToast.error();
                 Log.i(TAG, "VIEW NOT VISABLE");
             }
         }

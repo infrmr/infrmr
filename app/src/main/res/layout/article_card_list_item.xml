@@ -60,7 +60,7 @@
                 android:background="@color/colorPrimaryLight"/>
 
             <TextView
-                android:id="@+id/textViewDate"
+                android:id="@+id/textViewUpdated"
                 android:layout_below="@id/divider2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

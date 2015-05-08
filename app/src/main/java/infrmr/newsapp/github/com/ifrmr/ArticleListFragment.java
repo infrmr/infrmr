@@ -18,8 +18,6 @@ import android.view.ViewGroup;
  */
 public class ArticleListFragment extends Fragment {
 
-    // Adapter for RecyclerView
-    private RecyclerView.Adapter mAdapter;
     // Activity callback listener
     private OnFragmentInteractionListener mListener;
 
@@ -30,9 +28,9 @@ public class ArticleListFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     /**
-     * Boolean to detect whether the fragment is still visable
+     * Boolean to detect whether the fragment is still visible
      */
-    public static boolean isVisable;
+    public static boolean isVisible;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -63,7 +61,7 @@ public class ArticleListFragment extends Fragment {
         }
 
         // specify our custom adapter
-        mAdapter = new RecyclerAdapter(getActivity());
+        RecyclerView.Adapter mAdapter = new RecyclerAdapter(getActivity());
         mRecyclerView.setAdapter(mAdapter);
 
         return view;
@@ -72,13 +70,13 @@ public class ArticleListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        isVisable = true;
+        isVisible = true;
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        isVisable = false;
+        isVisible = false;
     }
 
     /**
@@ -94,13 +92,10 @@ public class ArticleListFragment extends Fragment {
     }
 
     /**
-     * for replacing
-     *
-     * @return
+     * Return new Fragment
      */
     public static ArticleListFragment newInstance() {
-        ArticleListFragment fragment = new ArticleListFragment();
-        return fragment;
+        return new ArticleListFragment();
     }
 
 
