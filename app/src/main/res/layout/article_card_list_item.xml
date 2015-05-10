@@ -32,14 +32,14 @@
                 android:layout_height="wrap_content"
                 android:padding="8dp"
                 android:textColor="@color/colorAccent"
-                android:textSize="20sp" />
+                android:textSize="@dimen/text_card_title" />
 
             <LinearLayout
                 android:id="@+id/divider1"
                 android:orientation="horizontal"
                 android:layout_below="@id/textViewTitle"
                 android:layout_width="match_parent"
-                android:layout_height="3dp"
+                android:layout_height="2dp"
                 android:background="@color/colorPrimaryLight"/>
 
             <TextView
@@ -47,7 +47,7 @@
                 android:layout_below="@id/divider1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="17sp"
+                android:textSize="@dimen/text_card_content"
                 android:padding="8dp"
                 android:textColor="@color/colorPrimary" />
 
@@ -64,9 +64,8 @@
                 android:layout_below="@id/divider2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_card_updated"
                 android:padding="8dp"
-                android:text="18:47 - Monday, 12th June"
                 android:textColor="@color/colorSecondaryText" />
 
         </RelativeLayout>

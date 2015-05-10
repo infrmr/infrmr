@@ -55,7 +55,7 @@ public class ArticleFragment extends Fragment {
         DateFormat formatter = new SimpleDateFormat("MMM dd h:mmaa");
 
         // Append string with title and article content
-        htmlString.append("<h3>" + title + "</h3>");
+        htmlString.append("<h3>").append(title).append("</h3>");
         htmlString.append("<em>" + getResources().getString(R.string.updated) + " " +
                 formatter.format(rightNow.getTime()) + "</em>");
         htmlString.append("<p>" + content + "</p><br><br>");

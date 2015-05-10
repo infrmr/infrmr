@@ -31,13 +31,13 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         TextView content;
         TextView updated;
 
-        public ViewHolder(LinearLayout v, TextView t, TextView c, TextView u) {
-            super(v);
-            mRelLayout = v;
-            title = t;
-            content = c;
-            updated = u;
-            v.setOnClickListener(this);
+        public ViewHolder(LinearLayout cardLayout, TextView tvTitle, TextView tvContent, TextView tvUpdated) {
+            super(cardLayout);
+            mRelLayout = cardLayout;
+            title = tvTitle;
+            content = tvContent;
+            updated = tvUpdated;
+            cardLayout.setOnClickListener(this);
         }
 
         @Override
@@ -72,7 +72,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         TheVergeXmlParser.Entry e = articles.get(position);
         holder.title.setText(e.title);
         holder.content.setText(formatContentFromHtml(e.content));
-        holder.updated.setText(e.updated);
+        holder.updated.setText(formatTime(e.updated));
 
     }
 
@@ -81,6 +81,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     public int getItemCount() {
         return articles.size();
     }
+
 
     @Override
     public long getItemId(int i) {
@@ -95,16 +96,23 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         // Create new StingBuilder object
         StringBuilder stringBuilder = new StringBuilder();
 
-        int p1 = content.indexOf("<p");
-        int p2 = content.indexOf("</p");
+        // Locations of paragraph start, end
+        int paragraphStart = content.indexOf("<p");
+        int paragraphEnd = content.indexOf("</p");
+
+        // int which ensures the first tag is ignored while searching for <p> tags
+        int ignoreFirstParagraph = 5;
+
+        // Article is too small if less than 150 character's
+        int shortArticleLength = 150;
 
         // Shorten to single paragraph...
-        String news = content.substring(p1, (p2));
+        String news = content.substring(paragraphStart, (paragraphEnd));
 
         // ... if the paragraph is too short, and a second paragraph exists...
-        if ((news.length() < 150) && content.substring(p2 + 5).contains("</p")) {
+        if ((news.length() < shortArticleLength) && content.substring(paragraphEnd + ignoreFirstParagraph).contains("</p")) {
             // ... create new string including second paragraph
-            news = content.substring(p1, content.indexOf("</p", p2 + 5));
+            news = content.substring(paragraphStart, content.indexOf("</p", paragraphEnd + ignoreFirstParagraph));
         }
 
         // Catch embedded tags inside paragraph
@@ -127,11 +135,26 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         int endOfParagraph = stringBuilder.toString().lastIndexOf(".");
 
         // Shorten string to this length
-        if (endOfParagraph > 100) {
+        if (endOfParagraph > shortArticleLength) {
             stringBuilder.setLength((endOfParagraph + 1));
         }
 
         // Return newly built paragraph
         return stringBuilder.toString();
     }
+
+    /**
+     * Helper method which builds the time/date string
+     */
+    public String formatTime(String updated) {
+        int separator = updated.indexOf("T");
+        int timeDivider = updated.lastIndexOf("-");
+
+        String date = updated.substring(0, separator);
+        String time = updated.substring(separator + 1, timeDivider);
+        String timeDiff = updated.substring(timeDivider);
+
+        return time + " (+- " + timeDiff +   ")        " + date;
+    }
+
 }

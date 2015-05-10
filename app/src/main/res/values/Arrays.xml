@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <!--Arrays for network setting -->
-    <string-array name="listArrayNetwork">
-        <item>Only when on Wi-Fi</item>
-        <item>On any network</item>
-    </string-array>
-    <string-array name="listValuesNetwork">
-        <item>Wi-Fi</item>
-        <item>Any</item>
-    </string-array>
     <!--Arrays for news feed topic setting -->
     <string-array name="listArrayTopic">
         <item>Android</item>
