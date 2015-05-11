@@ -57,7 +57,7 @@ public class ArticleListFragment extends Fragment {
     private static boolean mobileConnected = false;
     // String class name for debugging
     public String TAG = getClass().getSimpleName();
-    public TheVergeXmlParser.Entry mArticle;
+    // Download Async Task
     DownloadXmlTask dlt;
     // Activity callback listener
     private OnFragmentInteractionListener mListener;
@@ -65,6 +65,7 @@ public class ArticleListFragment extends Fragment {
     private NetworkReceiver receiver = new NetworkReceiver();
     // Instance of LoadToast library
     private LoadToast loadToast;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -91,12 +92,6 @@ public class ArticleListFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
-    public ArticleListFragment newInstance(TheVergeXmlParser.Entry article) {
-        this.mArticle = article;
-        return new ArticleListFragment();
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -139,8 +134,8 @@ public class ArticleListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (MainActivity.refreshDisplay) {
-            Log.i("REFRESH", "Refrash: " + MainActivity.refreshDisplay);
+        Log.i("REFRESH", "MainActivity.isUpToDate: " + MainActivity.isUpToDate);
+        if (!MainActivity.isUpToDate) {
             checkConnectionThenLoadPage();
         }
 
@@ -223,9 +218,10 @@ public class ArticleListFragment extends Fragment {
         // device loses its Wi-Fi connection midway through the user using the app,
         // you don't want to refresh the display--this would force the display of
         // an error page instead of TheVerge.com content.
-        if (MainActivity.refreshDisplay) {
+        //if (MainActivity.refreshDisplay) {
+
             loadPage();
-        }
+        //}
     }
 
     /**
@@ -286,6 +282,7 @@ public class ArticleListFragment extends Fragment {
      * Method for updating article data after successful download
      */
     void onItemsLoadComplete(ArrayList<TheVergeXmlParser.Entry> downloadedArticles) {
+        MainActivity.isUpToDate = true;
         // Update the adapter and notify data set changed
         RecyclerAdapter.articles.clear();
         for (int i = 0; i < downloadedArticles.size(); i++) {
@@ -301,7 +298,7 @@ public class ArticleListFragment extends Fragment {
      * activity. See: "http://developer.android.com/training/basics/fragments/communicating.html"
      */
     public interface OnFragmentInteractionListener {
-        public void onFragmentInteraction(int position);
+        void onFragmentInteraction(int position);
     }
 
     /**
@@ -349,7 +346,8 @@ public class ArticleListFragment extends Fragment {
      * which indicates a connection change. It checks whether the type is TYPE_WIFI.
      * If it is, it checks whether Wi-Fi is connected and sets the wifiConnected flag in the
      * main activity accordingly.
-     */
+     * */
+
     public class NetworkReceiver extends BroadcastReceiver {
 
         @Override
@@ -366,7 +364,8 @@ public class ArticleListFragment extends Fragment {
             if (networkInfo != null) {
                 // If device has a network connection, sets refreshDisplay
                 // to true. This allows the display to be refreshed upon next attempt.
-                MainActivity.refreshDisplay = true;
+
+                // MainActivity.refreshDisplay = true;
                 Log.i("REF", "REFRSH 1");
 
                 // Otherwise, the app can't download content due to no network

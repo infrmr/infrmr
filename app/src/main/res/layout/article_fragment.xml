@@ -16,8 +16,7 @@
         android:id="@+id/articleLayoutContent"
         android:layout_below="@id/articleLayoutTitle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Loading..." />
+        android:layout_height="wrap_content" />
 
 
 </RelativeLayout>

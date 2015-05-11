@@ -15,10 +15,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-
 
 public class ArticleFragment extends Fragment {
 
@@ -94,7 +90,6 @@ public class ArticleFragment extends Fragment {
         }).start();
 
 
-
     }
 
 
@@ -118,11 +113,11 @@ public class ArticleFragment extends Fragment {
 
         @Override
         protected String doInBackground(String... strings) {
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             try {
                 Log.d("JSwa", "Connecting to [" + strings[0] + "]");
                 Document doc = Jsoup.connect(strings[0]).get();
-                Log.d("JSwa", "Connected to [" + strings[0] + "]");
+                //Log.d("JSwa", "Connected to [" + strings[0] + "]");
                 // Get document (HTML page) title
                 String title = doc.title();
                 Log.d("JSwA", "Title [" + title + "]");
@@ -135,11 +130,9 @@ public class ArticleFragment extends Fragment {
                     buffer.append("\n" + p.text());
                 }
 
-
             } catch (Throwable t) {
                 t.printStackTrace();
             }
-
             return buffer.toString();
         }
 
@@ -147,7 +140,7 @@ public class ArticleFragment extends Fragment {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            Log.i("OPE", "TEXT JSOUP: " + s);
+            Log.i("OPE", "JSOUP FINAL STRINGS: " + s);
             content.setText(s);
         }
     }

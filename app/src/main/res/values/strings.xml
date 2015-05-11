@@ -21,6 +21,8 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="loading_news">Loading News…</string>
+    <string name="loading_news">Loading News&#8230;</string>
+    <string name="loading_article">Loading Article&#8230;</string>
+
 
 </resources>

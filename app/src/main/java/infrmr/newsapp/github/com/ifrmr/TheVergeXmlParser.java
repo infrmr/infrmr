@@ -1,7 +1,6 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 
-import android.util.Log;
 import android.util.Xml;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -50,23 +49,6 @@ public class TheVergeXmlParser {
             }
         }
         return entries;
-    }
-
-    // This class represents a single entry (post) in the XML feed.
-    // It includes the data members "title," "link," "content,"
-    public static class Entry {
-        public final String title;
-        public final String link;
-        public final String content;
-        public final String updated;
-
-
-        private Entry(String title, String link, String content, String updated) {
-            this.title = title;
-            this.link = link;
-            this.content = content;
-            this.updated = updated;
-        }
     }
 
     // Parses the contents of an entry. If it encounters a title, summary, or link tag, hands them
@@ -146,7 +128,6 @@ public class TheVergeXmlParser {
         return link;
     }
 
-
     // For the tags title and extracts their text values.
     private String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
         String result = "";
@@ -174,6 +155,23 @@ public class TheVergeXmlParser {
                     depth++;
                     break;
             }
+        }
+    }
+
+    // This class represents a single entry (post) in the XML feed.
+    // It includes the data members "title," "link," "content,"
+    public static class Entry {
+        public final String title;
+        public final String link;
+        public final String content;
+        public final String updated;
+
+
+        private Entry(String title, String link, String content, String updated) {
+            this.title = title;
+            this.link = link;
+            this.content = content;
+            this.updated = updated;
         }
     }
 }

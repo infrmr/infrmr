@@ -5,8 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.PreferenceFragment;
+import android.util.Log;
 
-import infrmr.newsapp.github.com.ifrmr.ArticleListFragment;
 import infrmr.newsapp.github.com.ifrmr.MainActivity;
 import infrmr.newsapp.github.com.ifrmr.R;
 
@@ -38,6 +38,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
         // Sets refreshDisplay to true so that when the user returns to the main
         // activity, the display refreshes to reflect the new settings.
+        Log.i("ONSHAREDCHANGE" , "SETTINZZZZ: "+ s);
+
         MainActivity.refreshDisplay = true;
         updatePrefSummary();
     }

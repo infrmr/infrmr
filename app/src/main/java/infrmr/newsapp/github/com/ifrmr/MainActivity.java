@@ -9,29 +9,27 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import de.keyboardsurfer.android.widget.crouton.Crouton;
 import infrmr.newsapp.github.com.ifrmr.settings.SettingsActivity;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks, ArticleListFragment.OnFragmentInteractionListener {
 
     /**
-     * TODO
+     * TO-DO:
      * - Set drawable background for cardViews
      * - Only refresh when needed (not in every onResume)
-     * - Check what Network Adapter actually does
+     * - Remove refreshDisplay
+     * - Work out what Network Adapter actually does, do we need it?
      */
 
+    public static boolean isUpToDate = false;
+    // Whether the display should be refreshed.
+    public static boolean refreshDisplay = false;
     // Whether the display should be refreshed.
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
     // For setting title
     private CharSequence mTitle;
-
-    // Whether the display should be refreshed.
-    public static boolean refreshDisplay = true;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
         setContentView(R.layout.activity_main);
 
         mTitle = getTitle();
+
 
         // Init Navigation Drawer
         NavigationDrawerFragment mNavigationDrawerFragment = (NavigationDrawerFragment)
