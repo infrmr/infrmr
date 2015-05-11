@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.PreferenceFragment;
 
+import infrmr.newsapp.github.com.ifrmr.ArticleListFragment;
 import infrmr.newsapp.github.com.ifrmr.MainActivity;
 import infrmr.newsapp.github.com.ifrmr.R;
 

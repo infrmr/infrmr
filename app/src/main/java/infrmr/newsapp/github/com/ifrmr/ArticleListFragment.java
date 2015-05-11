@@ -49,8 +49,6 @@ public class ArticleListFragment extends Fragment {
     public static final String DEFAULT_PREF_TOPIC = "http://www.theverge.com/android/rss/index.xml";
     // The fragment argument representing the section number for this fragment.
     private static final String ARG_SECTION_NUMBER = "section_number";
-    // Whether the display should be refreshed.
-    public static boolean refreshDisplay = true;
     // Default RSS Feed before loading from preference
     private static String topicPref = null;
     // Whether there is a Wi-Fi connection.
@@ -59,6 +57,8 @@ public class ArticleListFragment extends Fragment {
     private static boolean mobileConnected = false;
     // String class name for debugging
     public String TAG = getClass().getSimpleName();
+    public TheVergeXmlParser.Entry mArticle;
+    DownloadXmlTask dlt;
     // Activity callback listener
     private OnFragmentInteractionListener mListener;
     // The BroadcastReceiver that tracks network connectivity changes.
@@ -90,6 +90,11 @@ public class ArticleListFragment extends Fragment {
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public ArticleListFragment newInstance(TheVergeXmlParser.Entry article) {
+        this.mArticle = article;
+        return new ArticleListFragment();
     }
 
 
@@ -126,13 +131,28 @@ public class ArticleListFragment extends Fragment {
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         getActivity().registerReceiver(receiver, filter);
+
+        dlt = new DownloadXmlTask();
     }
 
     // Refreshes the display if the network connection and the pref settings allow it.
     @Override
     public void onResume() {
         super.onResume();
-        checkConnectionThenLoadPage();
+        if (MainActivity.refreshDisplay) {
+            Log.i("REFRESH", "Refrash: " + MainActivity.refreshDisplay);
+            checkConnectionThenLoadPage();
+        }
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (dlt != null) {
+            dlt.cancel(true);
+        }
+
     }
 
     @Override
@@ -203,7 +223,7 @@ public class ArticleListFragment extends Fragment {
         // device loses its Wi-Fi connection midway through the user using the app,
         // you don't want to refresh the display--this would force the display of
         // an error page instead of TheVerge.com content.
-        if (refreshDisplay) {
+        if (MainActivity.refreshDisplay) {
             loadPage();
         }
     }
@@ -220,7 +240,8 @@ public class ArticleListFragment extends Fragment {
         updateConnectedFlags();
 
         if (wifiConnected || mobileConnected) {
-            new DownloadXmlTask().execute(topicPref);
+            dlt = new DownloadXmlTask();
+            dlt.execute(topicPref);
             // Show loading toast
             loadToast = new LoadToast(getActivity());
             loadToast.setText(getString(R.string.loading_news));
@@ -308,15 +329,13 @@ public class ArticleListFragment extends Fragment {
         protected void onPostExecute(ArrayList<TheVergeXmlParser.Entry> articles) {
 
             if (articles != null && articles.size() > 0) {
-                if (getActivity().getSupportFragmentManager().findFragmentById(R.id.container).isVisible()) {
-                    loadToast.success();
-                    onItemsLoadComplete(articles);
-                    // Show new Fragment
-                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                    fragmentManager.beginTransaction()
-                            .replace(R.id.container, ArticleListFragment.newInstance(), "article_fragment").commit();
-                    refreshDisplay = false;
-                }
+                loadToast.success();
+                onItemsLoadComplete(articles);
+                // Show new Fragment
+                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                fragmentManager.beginTransaction()
+                        .replace(R.id.container, ArticleListFragment.newInstance(), "article_fragment").commit();
+                MainActivity.refreshDisplay = false;
             } else { //
                 loadToast.error();
                 Log.i(TAG, "onPostExecute - Articles null or empty (Most likely connection timeout)");
@@ -339,17 +358,21 @@ public class ArticleListFragment extends Fragment {
                     (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
+            Crouton.makeText(getActivity(), "NETWORK RECIEVER!!!!!!", Style.ALERT).show();
+
+
             // Checks the network connection. Based on the result, decides
             // whether to refresh the display or keep the current display.
             if (networkInfo != null) {
                 // If device has a network connection, sets refreshDisplay
                 // to true. This allows the display to be refreshed upon next attempt.
-                refreshDisplay = true;
+                MainActivity.refreshDisplay = true;
+                Log.i("REF", "REFRSH 1");
 
                 // Otherwise, the app can't download content due to no network
                 // connection (mobile or Wi-Fi). Sets refreshDisplay to false.
             } else {
-                refreshDisplay = false;
+                MainActivity.refreshDisplay = false;
                 Crouton.makeText(getActivity(), R.string.no_connection, Style.INFO).show();
             }
         }

@@ -23,11 +23,14 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
      */
 
     // Whether the display should be refreshed.
-    public static boolean refreshDisplay = true;
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
     // For setting title
     private CharSequence mTitle;
+
+    // Whether the display should be refreshed.
+    public static boolean refreshDisplay = true;
+
 
 
     @Override

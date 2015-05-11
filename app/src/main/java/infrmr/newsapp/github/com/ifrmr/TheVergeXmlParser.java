@@ -138,7 +138,6 @@ public class TheVergeXmlParser {
                 parser.nextTag();
             } else if (relType.equals("enclosure")) {
                 // Ignore video url
-                Log.d(getClass().getSimpleName(), "Video link: " + parser.getAttributeValue(null, "href"));
                 parser.nextTag();
                 return link;
             }

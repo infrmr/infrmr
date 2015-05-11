@@ -6,6 +6,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import infrmr.newsapp.github.com.ifrmr.R;
+import infrmr.newsapp.github.com.ifrmr.ArticleFragment;
 
 /**
  * Activity which hosts the article Fragment
@@ -16,7 +17,7 @@ public class ArticleActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Display the settings fragment
-        getFragmentManager().beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new ArticleFragment())
                 .commit();
     }

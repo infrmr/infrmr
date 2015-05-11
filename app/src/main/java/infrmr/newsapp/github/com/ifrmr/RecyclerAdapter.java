@@ -1,6 +1,7 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 import android.content.Context;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -11,43 +12,23 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import de.keyboardsurfer.android.widget.crouton.Crouton;
-import de.keyboardsurfer.android.widget.crouton.Style;
-
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
 
     public static ArrayList<TheVergeXmlParser.Entry> articles = new ArrayList<>();
 
     private static Context mContext;
 
+    private static ArticleFragment mArticleFragment;
+
+
     public RecyclerAdapter(Context c) {
+
         mContext = c;
+        MainActivity mMainActivity = (MainActivity) c;
+        mArticleFragment = (ArticleFragment) mMainActivity.getSupportFragmentManager().findFragmentById(R.id.article_fragment_id);
+
+
     }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        // each data item is just a string in this case
-        public LinearLayout mRelLayout;
-        TextView title;
-        TextView content;
-        TextView updated;
-
-        public ViewHolder(LinearLayout cardLayout, TextView tvTitle, TextView tvContent, TextView tvUpdated) {
-            super(cardLayout);
-            mRelLayout = cardLayout;
-            title = tvTitle;
-            content = tvContent;
-            updated = tvUpdated;
-            cardLayout.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View view) {
-            TheVergeXmlParser.Entry e = articles.get(getPosition());
-            Crouton.makeText((MainActivity) mContext, "onClick: " + e.title, Style.INFO).show();
-
-        }
-    }
-
 
     // Create new views (invoked by the layout manager)
     @Override
@@ -56,7 +37,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         // create a new view
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.article_card_list_item, parent, false);
-
 
 
         // set the view's size, margins, padding and layout parameters
@@ -81,7 +61,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     public int getItemCount() {
         return articles.size();
     }
-
 
     @Override
     public long getItemId(int i) {
@@ -154,7 +133,44 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         String time = updated.substring(separator + 1, timeDivider);
         String timeDiff = updated.substring(timeDivider);
 
-        return time + " (+- " + timeDiff +   ")        " + date;
+        return time + " (+- " + timeDiff + ")        " + date;
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        // each data item is just a string in this case
+        public LinearLayout mRelLayout;
+        TextView title;
+        TextView content;
+        TextView updated;
+
+        public ViewHolder(LinearLayout cardLayout, TextView tvTitle, TextView tvContent, TextView tvUpdated) {
+            super(cardLayout);
+            mRelLayout = cardLayout;
+            title = tvTitle;
+            content = tvContent;
+            updated = tvUpdated;
+            cardLayout.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            TheVergeXmlParser.Entry e = articles.get(getPosition());
+
+            FragmentManager fragmentManager = ((MainActivity) mContext).getSupportFragmentManager();
+
+            if (mArticleFragment == null)
+                mArticleFragment = new ArticleFragment();
+
+
+            fragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.enter, R.anim.exit, R.anim.pop_enter, R.anim.pop_exit)
+                    .replace(R.id.container, mArticleFragment)
+                    .addToBackStack("ArticleListView").commit();
+            fragmentManager.executePendingTransactions();
+
+            mArticleFragment.sendData(e);
+
+        }
     }
 
 }
