@@ -213,16 +213,8 @@ public class ArticleListFragment extends Fragment {
         // Check internet connection
         updateConnectedFlags();
 
-        // Only loads the page if refreshDisplay is true. Otherwise, keeps previous
-        // display. For example, if the user has set "Wi-Fi only" in prefs and the
-        // device loses its Wi-Fi connection midway through the user using the app,
-        // you don't want to refresh the display--this would force the display of
-        // an error page instead of TheVerge.com content.
-        //if (MainActivity.refreshDisplay) {
-
-            loadPage();
-        //}
-    }
+        loadPage();
+        }
 
     /**
      * Uses AsyncTask subclass to download XML feed from TheVerge.com concurrently.
@@ -332,7 +324,6 @@ public class ArticleListFragment extends Fragment {
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 fragmentManager.beginTransaction()
                         .replace(R.id.container, ArticleListFragment.newInstance(), "article_fragment").commit();
-                MainActivity.refreshDisplay = false;
             } else { //
                 loadToast.error();
                 Log.i(TAG, "onPostExecute - Articles null or empty (Most likely connection timeout)");
@@ -356,24 +347,21 @@ public class ArticleListFragment extends Fragment {
                     (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
-            Crouton.makeText(getActivity(), "NETWORK RECIEVER!!!!!!", Style.ALERT).show();
-
+            Crouton.makeText(getActivity(), "NETWORK RECIEVER: " + networkInfo, Style.ALERT).show();
 
             // Checks the network connection. Based on the result, decides
             // whether to refresh the display or keep the current display.
-            if (networkInfo != null) {
+            //if (networkInfo != null) {
                 // If device has a network connection, sets refreshDisplay
                 // to true. This allows the display to be refreshed upon next attempt.
 
-                // MainActivity.refreshDisplay = true;
-                Log.i("REF", "REFRSH 1");
 
                 // Otherwise, the app can't download content due to no network
                 // connection (mobile or Wi-Fi). Sets refreshDisplay to false.
-            } else {
-                MainActivity.refreshDisplay = false;
-                Crouton.makeText(getActivity(), R.string.no_connection, Style.INFO).show();
-            }
+            //} else {
+            //    MainActivity.refreshDisplay = false;
+            //    Crouton.makeText(getActivity(), R.string.no_connection, Style.INFO).show();
+            //}
         }
     }
 

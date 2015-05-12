@@ -24,8 +24,6 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 
     public static boolean isUpToDate = false;
     // Whether the display should be refreshed.
-    public static boolean refreshDisplay = false;
-    // Whether the display should be refreshed.
     // Tag for debugging
     public String TAG = getClass().getSimpleName();
     // For setting title
