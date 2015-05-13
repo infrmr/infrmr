@@ -118,7 +118,6 @@ public class TheVergeXmlParser {
         if (tag.equals("link")) {
             if (relType.equals("alternate")) {
                 link = parser.getAttributeValue(null, "href");
-                Log.i(getClass().getSimpleName(), "LinkInParser - Link: " + link);
                 parser.nextTag();
                 return link;
             } else if (relType.equals("enclosure")) {
@@ -174,7 +173,6 @@ public class TheVergeXmlParser {
         private Entry(String title, String link, String content, String updated) {
             this.title = title;
             this.link = link;
-            Log.i(getClass().getSimpleName(), "inENTRY: Link: " + link);
             this.content = content;
             this.updated = updated;
             this.formattedContent = "";
