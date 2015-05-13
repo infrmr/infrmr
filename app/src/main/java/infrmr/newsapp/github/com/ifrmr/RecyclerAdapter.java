@@ -1,7 +1,7 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 import android.content.Context;
-import android.support.v4.app.FragmentManager;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -12,6 +12,11 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
+
+/**
+ * The custom adapter for placing article data into cardviews
+ */
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
 
     // The Array which will hold the Article objects
@@ -20,18 +25,12 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     // For easy access to Activity context
     private static Context mContext;
 
-    //
-    private static ArticleFragment mArticleFragment;
-
-
+    /**
+     * Initialize method
+     */
     public RecyclerAdapter(Context context) {
         // Save context reference for future
         mContext = context;
-
-        // Get current ListFragment todo: is this neccessary?
-        MainActivity mMainActivity = (MainActivity) context;
-        mArticleFragment = (ArticleFragment) mMainActivity.getSupportFragmentManager().findFragmentById(R.id.article_fragment_id);
-
     }
 
     // Initialize View Holder references
@@ -57,7 +56,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         TheVergeXmlParser.Entry e = articles.get(position);
         // Update recycled view with new information
         holder.title.setText(e.title);
-        holder.content.setText(formatContentFromHtml(e.content));
+        holder.content.setText(formatContentFromHtml(e));
         holder.updated.setText(formatTime(e.updated));
     }
 
@@ -70,7 +69,9 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     /**
      * Format content html to a single paragraph.
      */
-    private String formatContentFromHtml(String content) {
+    private String formatContentFromHtml(TheVergeXmlParser.Entry entry) {
+
+        String content = entry.content;
 
         // Create new StingBuilder object
         StringBuilder stringBuilder = new StringBuilder();
@@ -118,6 +119,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
             stringBuilder.setLength((endOfParagraph + 1));
         }
 
+        entry.formattedContent = stringBuilder.toString();
+
         // Return newly built paragraph
         return stringBuilder.toString();
     }
@@ -133,8 +136,9 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         String time = updated.substring(separator + 1, timeDivider);
         String timeDiff = updated.substring(timeDivider);
 
-        return "Updated: " + time + " (" + timeDiff + ")        " + date;
+        return time.substring(0, 5) + "  -  " + date;
     }
+
 
     /**
      * View Holder Class for recycling views
@@ -163,22 +167,12 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
             // Get Article ready for new Fragment
             TheVergeXmlParser.Entry e = articles.get(getPosition());
 
-            // Get fragment manager
-            FragmentManager fragmentManager = ((MainActivity) mContext).getSupportFragmentManager();
-
-            // Get new Fragment instance if null
-            if (mArticleFragment == null)
-                mArticleFragment = new ArticleFragment();
-
-            // Build new Fragment Transaction, set animation & add to back stack
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.enter, R.anim.exit, R.anim.pop_enter, R.anim.pop_exit)
-                    .replace(R.id.container, mArticleFragment)
-                    .addToBackStack("ArticleListView").commit();
-            fragmentManager.executePendingTransactions();
-
-            // Pass Article to new Fragment
-            mArticleFragment.sendData(e);
+            Intent i = new Intent(mContext, ArticleActivity.class);
+            i.putExtra("title", e.title);
+            i.putExtra("content", e.formattedContent);
+            i.putExtra("link", e.link);
+            i.putExtra("updated", e.updated);
+            mContext.startActivity(i);
 
         }
     }

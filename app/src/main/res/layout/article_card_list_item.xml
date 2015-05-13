@@ -11,15 +11,17 @@
         android:id="@+id/card_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        card_view:cardCornerRadius="6dp"
-        card_view:cardElevation="4dp"
-        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="12dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
         android:paddingLeft="?android:attr/listPreferredItemPaddingRight"
         android:paddingRight="?android:attr/listPreferredItemPaddingRight"
-        android:minHeight="?android:attr/listPreferredItemHeightSmall"
-        android:background="?android:attr/selectableItemBackground"
-        card_view:cardUseCompatPadding="true">
+        card_view:cardCornerRadius="6dp"
+        card_view:cardElevation="4dp"
+        card_view:cardUseCompatPadding="true"
+        card_view:contentPaddingBottom="0dp">
 
         <RelativeLayout
             android:id="@+id/relativeCardLayout"
@@ -36,37 +38,37 @@
 
             <LinearLayout
                 android:id="@+id/divider1"
-                android:orientation="horizontal"
-                android:layout_below="@id/textViewTitle"
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
-                android:background="@color/colorPrimaryLight"/>
+                android:layout_below="@id/textViewTitle"
+                android:background="@color/colorPrimaryLight"
+                android:orientation="horizontal" />
 
             <TextView
                 android:id="@+id/textViewContent"
-                android:layout_below="@id/divider1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="@dimen/text_card_content"
+                android:layout_below="@id/divider1"
                 android:padding="8dp"
-                android:textColor="@color/colorPrimary" />
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/text_card_content" />
 
             <LinearLayout
                 android:id="@+id/divider2"
-                android:orientation="horizontal"
-                android:layout_below="@id/textViewContent"
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
-                android:background="@color/colorPrimaryLight"/>
+                android:layout_below="@id/textViewContent"
+                android:background="@color/colorPrimaryLight"
+                android:orientation="horizontal" />
 
             <TextView
                 android:id="@+id/textViewUpdated"
-                android:layout_below="@id/divider2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="@dimen/text_card_updated"
+                android:layout_below="@id/divider2"
                 android:padding="8dp"
-                android:textColor="@color/colorSecondaryText" />
+                android:textColor="@color/colorSecondaryText"
+                android:textSize="@dimen/text_card_updated" />
 
         </RelativeLayout>
 

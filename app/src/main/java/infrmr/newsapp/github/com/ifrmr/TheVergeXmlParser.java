@@ -1,6 +1,7 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 
+import android.util.Log;
 import android.util.Xml;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -70,7 +71,7 @@ public class TheVergeXmlParser {
                     title = readTitle(parser);
                     break;
                 case ("link"):
-                    link = readLink(parser);
+                    link = readLink(parser, link);
                     break;
                 case ("content"):
                     content = readContent(parser);
@@ -109,15 +110,17 @@ public class TheVergeXmlParser {
     }
 
     // Processes link tags in the feed.
-    private String readLink(XmlPullParser parser) throws IOException, XmlPullParserException {
-        String link = "";
+    private String readLink(XmlPullParser parser, String link) throws IOException, XmlPullParserException {
+        // String link = "";
         parser.require(XmlPullParser.START_TAG, ns, "link");
         String tag = parser.getName();
         String relType = parser.getAttributeValue(null, "rel");
         if (tag.equals("link")) {
             if (relType.equals("alternate")) {
                 link = parser.getAttributeValue(null, "href");
+                Log.i(getClass().getSimpleName(), "LinkInParser - Link: " + link);
                 parser.nextTag();
+                return link;
             } else if (relType.equals("enclosure")) {
                 // Ignore video url
                 parser.nextTag();
@@ -165,13 +168,16 @@ public class TheVergeXmlParser {
         public final String link;
         public final String content;
         public final String updated;
+        public String formattedContent;
 
 
         private Entry(String title, String link, String content, String updated) {
             this.title = title;
             this.link = link;
+            Log.i(getClass().getSimpleName(), "inENTRY: Link: " + link);
             this.content = content;
             this.updated = updated;
+            this.formattedContent = "";
         }
     }
 }

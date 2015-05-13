@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -93,6 +95,41 @@ public class ArticleListFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Helper method for getting topic title. Todo - Find an better way to do this.
+     */
+    static public String getTopicFromPref(String topicPref) {
+        if (topicPref.contentEquals("http://www.theverge.com/android/rss/index.xml")) {
+            return "Android";
+        } else if (topicPref.contentEquals("http://www.theverge.com/apple/rss/index.xml")) {
+            return "Apple";
+        } else if (topicPref.contentEquals("http://www.theverge.com/apps/rss/index.xml")) {
+            return "Apps";
+        } else if (topicPref.contentEquals("http://www.theverge.com/blackberry/rss/index.xml")) {
+            return "Blackberry";
+        } else if (topicPref.contentEquals("http://www.theverge.com/culture/rss/index.xml")) {
+            return "Culture";
+        } else if (topicPref.contentEquals("http://www.theverge.com/rss/group/features/index.xml")) {
+            return "Features";
+        } else if (topicPref.contentEquals("http://www.theverge.com/gaming/rss/index.xml")) {
+            return "Gaming";
+        } else if (topicPref.contentEquals("http://www.theverge.com/hd/rss/index.xml")) {
+            return "HD & Home";
+        } else if (topicPref.contentEquals("http://www.theverge.com/microsoft/rss/index.xml")) {
+            return "Microsoft";
+        } else if (topicPref.contentEquals("http://www.theverge.com/mobile/rss/index.xml")) {
+            return "Mobile";
+        } else if (topicPref.contentEquals("http://www.theverge.com/photography/rss/index.xml")) {
+            return "Photography";
+        } else if (topicPref.contentEquals("http://www.theverge.com/policy/rss/index.xml")) {
+            return "Policy & Law";
+        } else if (topicPref.contentEquals("http://www.theverge.com/web/rss/index.xml")) {
+            return "Web & Social";
+        } else {
+            return "Infrmr";
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -115,6 +152,16 @@ public class ArticleListFragment extends Fragment {
         // specify our custom adapter
         RecyclerView.Adapter mAdapter = new RecyclerAdapter(getActivity());
         mRecyclerView.setAdapter(mAdapter);
+
+        if (getSupportActionBar() != null) {
+            // Get preference manager
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            // Retrieves the users preference for news topic
+            topicPref = sharedPrefs.getString(PREF_TOPIC, DEFAULT_PREF_TOPIC);
+
+            getSupportActionBar().setTitle(getTopicFromPref(topicPref));
+        }
+
 
         return frameLayout;
     }
@@ -214,7 +261,7 @@ public class ArticleListFragment extends Fragment {
         updateConnectedFlags();
 
         loadPage();
-        }
+    }
 
     /**
      * Uses AsyncTask subclass to download XML feed from TheVerge.com concurrently.
@@ -231,6 +278,9 @@ public class ArticleListFragment extends Fragment {
             dlt = new DownloadXmlTask();
             dlt.execute(topicPref);
             // Show loading toast
+            if (loadToast != null) {
+                loadToast.error();
+            }
             loadToast = new LoadToast(getActivity());
             loadToast.setText(getString(R.string.loading_news));
             loadToast.show();
@@ -274,12 +324,17 @@ public class ArticleListFragment extends Fragment {
      * Method for updating article data after successful download
      */
     void onItemsLoadComplete(ArrayList<TheVergeXmlParser.Entry> downloadedArticles) {
+        Log.i("UTD", "onLoadComplete: isUpToDate = true");
         MainActivity.isUpToDate = true;
         // Update the adapter and notify data set changed
         RecyclerAdapter.articles.clear();
         for (int i = 0; i < downloadedArticles.size(); i++) {
             RecyclerAdapter.articles.add(downloadedArticles.get(i));
         }
+    }
+
+    public ActionBar getSupportActionBar() {
+        return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
 
@@ -326,7 +381,9 @@ public class ArticleListFragment extends Fragment {
                         .replace(R.id.container, ArticleListFragment.newInstance(), "article_fragment").commit();
             } else { //
                 loadToast.error();
+                Crouton.makeText(getActivity(), "Connection timeout, please check connection and try again.", Style.ALERT).show();
                 Log.i(TAG, "onPostExecute - Articles null or empty (Most likely connection timeout)");
+                // TODO - show a new fragment with error message
 
             }
         }
@@ -336,8 +393,9 @@ public class ArticleListFragment extends Fragment {
      * This BroadcastReceiver intercepts the android.net.ConnectivityManager.CONNECTIVITY_ACTION,
      * which indicates a connection change. It checks whether the type is TYPE_WIFI.
      * If it is, it checks whether Wi-Fi is connected and sets the wifiConnected flag in the
-     * main activity accordingly.
-     * */
+     * main activity accordingly. todo: Is there any use for this method? Maybe if first attempt at
+     * connection failed, then the user gets signal, update automatically
+     */
 
     public class NetworkReceiver extends BroadcastReceiver {
 
@@ -347,17 +405,17 @@ public class ArticleListFragment extends Fragment {
                     (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
-            Crouton.makeText(getActivity(), "NETWORK RECIEVER: " + networkInfo, Style.ALERT).show();
+            // Crouton.makeText(getActivity(), "NETWORK RECIEVER: " + networkInfo, Style.ALERT).show();
 
             // Checks the network connection. Based on the result, decides
             // whether to refresh the display or keep the current display.
             //if (networkInfo != null) {
-                // If device has a network connection, sets refreshDisplay
-                // to true. This allows the display to be refreshed upon next attempt.
+            // If device has a network connection, sets refreshDisplay
+            // to true. This allows the display to be refreshed upon next attempt.
 
 
-                // Otherwise, the app can't download content due to no network
-                // connection (mobile or Wi-Fi). Sets refreshDisplay to false.
+            // Otherwise, the app can't download content due to no network
+            // connection (mobile or Wi-Fi). Sets refreshDisplay to false.
             //} else {
             //    MainActivity.refreshDisplay = false;
             //    Crouton.makeText(getActivity(), R.string.no_connection, Style.INFO).show();

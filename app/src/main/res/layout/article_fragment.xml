@@ -1,22 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/article_fragment_id"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#fff"
-    android:padding="16dp">
+    android:background="#eee">
 
-
-    <TextView
-        android:id="@+id/articleLayoutTitle"
+    <!-- A CardView that contains a TextView -->
+    <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/card_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
+        card_view:cardCornerRadius="6dp"
+        card_view:cardElevation="4dp"
+        card_view:cardUseCompatPadding="true"
+        card_view:contentPaddingBottom="2dp">
 
-    <TextView
-        android:id="@+id/articleLayoutContent"
-        android:layout_below="@id/articleLayoutTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        <RelativeLayout
+            android:id="@+id/relativeCardLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/articleLayoutTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:padding="8dp"
+                android:textColor="@color/colorAccent"
+                android:textSize="@dimen/text_card_title" />
 
 
-</RelativeLayout>
+            <LinearLayout
+                android:id="@+id/divider1"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_below="@id/articleLayoutTitle"
+                android:background="@color/colorPrimaryLight"
+                android:orientation="horizontal" />
+
+            <TextView
+                android:id="@+id/articleLayoutContent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/divider1"
+                android:lineSpacingExtra=".5dp"
+                android:padding="8dp"
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/text_card_content" />
+
+            <ProgressBar
+                android:id="@+id/loadingSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/articleLayoutContent"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/articleViewUpdated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/articleLayoutContent"
+                android:padding="8dp"
+                android:textColor="@color/colorSecondaryText"
+                android:textSize="@dimen/text_card_updated" />
+
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+</ScrollView>
+
+
