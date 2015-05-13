@@ -52,23 +52,6 @@ public class TheVergeXmlParser {
         return entries;
     }
 
-    // This class represents a single entry (post) in the XML feed.
-    // It includes the data members "title," "link," "content,"
-    public static class Entry {
-        public final String title;
-        public final String link;
-        public final String content;
-        public final String updated;
-
-
-        private Entry(String title, String link, String content, String updated) {
-            this.title = title;
-            this.link = link;
-            this.content = content;
-            this.updated = updated;
-        }
-    }
-
     // Parses the contents of an entry. If it encounters a title, summary, or link tag, hands them
     // off
     // to their respective &quot;read&quot; methods for processing. Otherwise, skips the tag.
@@ -88,7 +71,7 @@ public class TheVergeXmlParser {
                     title = readTitle(parser);
                     break;
                 case ("link"):
-                    link = readLink(parser);
+                    link = readLink(parser, link);
                     break;
                 case ("content"):
                     content = readContent(parser);
@@ -127,8 +110,8 @@ public class TheVergeXmlParser {
     }
 
     // Processes link tags in the feed.
-    private String readLink(XmlPullParser parser) throws IOException, XmlPullParserException {
-        String link = "";
+    private String readLink(XmlPullParser parser, String link) throws IOException, XmlPullParserException {
+        // String link = "";
         parser.require(XmlPullParser.START_TAG, ns, "link");
         String tag = parser.getName();
         String relType = parser.getAttributeValue(null, "rel");
@@ -136,9 +119,9 @@ public class TheVergeXmlParser {
             if (relType.equals("alternate")) {
                 link = parser.getAttributeValue(null, "href");
                 parser.nextTag();
+                return link;
             } else if (relType.equals("enclosure")) {
                 // Ignore video url
-                Log.d(getClass().getSimpleName(), "Video link: " + parser.getAttributeValue(null, "href"));
                 parser.nextTag();
                 return link;
             }
@@ -146,7 +129,6 @@ public class TheVergeXmlParser {
         parser.require(XmlPullParser.END_TAG, ns, "link");
         return link;
     }
-
 
     // For the tags title and extracts their text values.
     private String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -175,6 +157,25 @@ public class TheVergeXmlParser {
                     depth++;
                     break;
             }
+        }
+    }
+
+    // This class represents a single entry (post) in the XML feed.
+    // It includes the data members "title," "link," "content,"
+    public static class Entry {
+        public final String title;
+        public final String link;
+        public final String content;
+        public final String updated;
+        public String formattedContent;
+
+
+        private Entry(String title, String link, String content, String updated) {
+            this.title = title;
+            this.link = link;
+            this.content = content;
+            this.updated = updated;
+            this.formattedContent = "";
         }
     }
 }

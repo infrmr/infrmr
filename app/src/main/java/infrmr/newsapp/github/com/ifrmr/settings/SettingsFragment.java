@@ -31,13 +31,17 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
-
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String prefChanged) {
 
         // Sets refreshDisplay to true so that when the user returns to the main
         // activity, the display refreshes to reflect the new settings.
-        MainActivity.refreshDisplay = true;
+        if (prefChanged.equals("topicPref")) {
+            // Request refresh when exiting Settings
+            MainActivity.isUpToDate = false;
+        }
+
+        // Update preference summaries
         updatePrefSummary();
     }
 

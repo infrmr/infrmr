@@ -1,6 +1,7 @@
 package infrmr.newsapp.github.com.ifrmr;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
@@ -11,69 +12,52 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import de.keyboardsurfer.android.widget.crouton.Crouton;
-import de.keyboardsurfer.android.widget.crouton.Style;
+import infrmr.newsapp.github.com.ifrmr.article.ArticleActivity;
 
+/**
+ * The custom adapter for placing article data into cardviews
+ */
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
 
+    // The Array which will hold the Article objects
     public static ArrayList<TheVergeXmlParser.Entry> articles = new ArrayList<>();
 
+    // For easy access to Activity context
     private static Context mContext;
 
-    public RecyclerAdapter(Context c) {
-        mContext = c;
+    /**
+     * Initialize method
+     */
+    public RecyclerAdapter(Context context) {
+        // Save context reference for future
+        mContext = context;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        // each data item is just a string in this case
-        public LinearLayout mRelLayout;
-        TextView title;
-        TextView content;
-        TextView updated;
-
-        public ViewHolder(LinearLayout cardLayout, TextView tvTitle, TextView tvContent, TextView tvUpdated) {
-            super(cardLayout);
-            mRelLayout = cardLayout;
-            title = tvTitle;
-            content = tvContent;
-            updated = tvUpdated;
-            cardLayout.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View view) {
-            TheVergeXmlParser.Entry e = articles.get(getPosition());
-            Crouton.makeText((MainActivity) mContext, "onClick: " + e.title, Style.INFO).show();
-
-        }
-    }
-
-
-    // Create new views (invoked by the layout manager)
+    // Initialize View Holder references
     @Override
-    public RecyclerAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                         int viewType) {
-        // create a new view
-        LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
+    public RecyclerAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        // Inflate card layout
+        LinearLayout cardLayout = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.article_card_list_item, parent, false);
 
+        // Set textView References
+        TextView title = (TextView) cardLayout.findViewById(R.id.textViewTitle);
+        TextView content = (TextView) cardLayout.findViewById(R.id.textViewContent);
+        TextView updated = (TextView) cardLayout.findViewById(R.id.textViewUpdated);
 
-
-        // set the view's size, margins, padding and layout parameters
-        TextView title = (TextView) v.findViewById(R.id.textViewTitle);
-        TextView content = (TextView) v.findViewById(R.id.textViewContent);
-        TextView updated = (TextView) v.findViewById(R.id.textViewUpdated);
-        return new ViewHolder(v, title, content, updated);
+        // Return new ViewHolder with references
+        return new ViewHolder(cardLayout, title, content, updated);
     }
 
     // Replace the contents of a view with new data from Article
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        // Get the current article
         TheVergeXmlParser.Entry e = articles.get(position);
+        // Update recycled view with new information
         holder.title.setText(e.title);
-        holder.content.setText(formatContentFromHtml(e.content));
+        holder.content.setText(formatContentFromHtml(e));
         holder.updated.setText(formatTime(e.updated));
-
     }
 
     // Return the size of Array
@@ -82,16 +66,12 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         return articles.size();
     }
 
-
-    @Override
-    public long getItemId(int i) {
-        return i;
-    }
-
     /**
      * Format content html to a single paragraph.
      */
-    private String formatContentFromHtml(String content) {
+    private String formatContentFromHtml(TheVergeXmlParser.Entry entry) {
+
+        String content = entry.content;
 
         // Create new StingBuilder object
         StringBuilder stringBuilder = new StringBuilder();
@@ -139,6 +119,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
             stringBuilder.setLength((endOfParagraph + 1));
         }
 
+        entry.formattedContent = stringBuilder.toString();
+
         // Return newly built paragraph
         return stringBuilder.toString();
     }
@@ -154,7 +136,45 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
         String time = updated.substring(separator + 1, timeDivider);
         String timeDiff = updated.substring(timeDivider);
 
-        return time + " (+- " + timeDiff +   ")        " + date;
+        return time.substring(0, 5) + "  -  " + date;
+    }
+
+
+    /**
+     * View Holder Class for recycling views
+     */
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        // References
+        public LinearLayout mRelLayout;
+        TextView title;
+        TextView content;
+        TextView updated;
+
+        public ViewHolder(LinearLayout cardLayout, TextView tvTitle, TextView tvContent, TextView tvUpdated) {
+            super(cardLayout);
+            // Setup card click listener
+            cardLayout.setOnClickListener(this);
+
+            // Initialise references
+            mRelLayout = cardLayout;
+            title = tvTitle;
+            content = tvContent;
+            updated = tvUpdated;
+        }
+
+        @Override
+        public void onClick(View view) {
+            // Get Article ready for new Fragment
+            TheVergeXmlParser.Entry e = articles.get(getPosition());
+
+            Intent i = new Intent(mContext, ArticleActivity.class);
+            i.putExtra("title", e.title);
+            i.putExtra("content", e.formattedContent);
+            i.putExtra("link", e.link);
+            i.putExtra("updated", e.updated);
+            mContext.startActivity(i);
+
+        }
     }
 
 }

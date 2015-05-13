@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -49,8 +51,6 @@ public class ArticleListFragment extends Fragment {
     public static final String DEFAULT_PREF_TOPIC = "http://www.theverge.com/android/rss/index.xml";
     // The fragment argument representing the section number for this fragment.
     private static final String ARG_SECTION_NUMBER = "section_number";
-    // Whether the display should be refreshed.
-    public static boolean refreshDisplay = true;
     // Default RSS Feed before loading from preference
     private static String topicPref = null;
     // Whether there is a Wi-Fi connection.
@@ -59,12 +59,15 @@ public class ArticleListFragment extends Fragment {
     private static boolean mobileConnected = false;
     // String class name for debugging
     public String TAG = getClass().getSimpleName();
+    // Download Async Task
+    DownloadXmlTask dlt;
     // Activity callback listener
     private OnFragmentInteractionListener mListener;
     // The BroadcastReceiver that tracks network connectivity changes.
     private NetworkReceiver receiver = new NetworkReceiver();
     // Instance of LoadToast library
     private LoadToast loadToast;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -92,6 +95,40 @@ public class ArticleListFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Helper method for getting topic title. Todo - Find an better way to do this.
+     */
+    static public String getTopicFromPref(String topicPref) {
+        if (topicPref.contentEquals("http://www.theverge.com/android/rss/index.xml")) {
+            return "Android";
+        } else if (topicPref.contentEquals("http://www.theverge.com/apple/rss/index.xml")) {
+            return "Apple";
+        } else if (topicPref.contentEquals("http://www.theverge.com/apps/rss/index.xml")) {
+            return "Apps";
+        } else if (topicPref.contentEquals("http://www.theverge.com/blackberry/rss/index.xml")) {
+            return "Blackberry";
+        } else if (topicPref.contentEquals("http://www.theverge.com/culture/rss/index.xml")) {
+            return "Culture";
+        } else if (topicPref.contentEquals("http://www.theverge.com/rss/group/features/index.xml")) {
+            return "Features";
+        } else if (topicPref.contentEquals("http://www.theverge.com/gaming/rss/index.xml")) {
+            return "Gaming";
+        } else if (topicPref.contentEquals("http://www.theverge.com/hd/rss/index.xml")) {
+            return "HD & Home";
+        } else if (topicPref.contentEquals("http://www.theverge.com/microsoft/rss/index.xml")) {
+            return "Microsoft";
+        } else if (topicPref.contentEquals("http://www.theverge.com/mobile/rss/index.xml")) {
+            return "Mobile";
+        } else if (topicPref.contentEquals("http://www.theverge.com/photography/rss/index.xml")) {
+            return "Photography";
+        } else if (topicPref.contentEquals("http://www.theverge.com/policy/rss/index.xml")) {
+            return "Policy & Law";
+        } else if (topicPref.contentEquals("http://www.theverge.com/web/rss/index.xml")) {
+            return "Web & Social";
+        } else {
+            return "Infrmr";
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -116,6 +153,16 @@ public class ArticleListFragment extends Fragment {
         RecyclerView.Adapter mAdapter = new RecyclerAdapter(getActivity());
         mRecyclerView.setAdapter(mAdapter);
 
+        if (getSupportActionBar() != null) {
+            // Get preference manager
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            // Retrieves the users preference for news topic
+            topicPref = sharedPrefs.getString(PREF_TOPIC, DEFAULT_PREF_TOPIC);
+
+            getSupportActionBar().setTitle(getTopicFromPref(topicPref));
+        }
+
+
         return frameLayout;
     }
 
@@ -126,13 +173,28 @@ public class ArticleListFragment extends Fragment {
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         getActivity().registerReceiver(receiver, filter);
+
+        dlt = new DownloadXmlTask();
     }
 
     // Refreshes the display if the network connection and the pref settings allow it.
     @Override
     public void onResume() {
         super.onResume();
-        checkConnectionThenLoadPage();
+        Log.i("REFRESH", "MainActivity.isUpToDate: " + MainActivity.isUpToDate);
+        if (!MainActivity.isUpToDate) {
+            checkConnectionThenLoadPage();
+        }
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (dlt != null) {
+            dlt.cancel(true);
+        }
+
     }
 
     @Override
@@ -198,14 +260,7 @@ public class ArticleListFragment extends Fragment {
         // Check internet connection
         updateConnectedFlags();
 
-        // Only loads the page if refreshDisplay is true. Otherwise, keeps previous
-        // display. For example, if the user has set "Wi-Fi only" in prefs and the
-        // device loses its Wi-Fi connection midway through the user using the app,
-        // you don't want to refresh the display--this would force the display of
-        // an error page instead of TheVerge.com content.
-        if (refreshDisplay) {
-            loadPage();
-        }
+        loadPage();
     }
 
     /**
@@ -220,8 +275,12 @@ public class ArticleListFragment extends Fragment {
         updateConnectedFlags();
 
         if (wifiConnected || mobileConnected) {
-            new DownloadXmlTask().execute(topicPref);
+            dlt = new DownloadXmlTask();
+            dlt.execute(topicPref);
             // Show loading toast
+            if (loadToast != null) {
+                loadToast.error();
+            }
             loadToast = new LoadToast(getActivity());
             loadToast.setText(getString(R.string.loading_news));
             loadToast.show();
@@ -265,11 +324,17 @@ public class ArticleListFragment extends Fragment {
      * Method for updating article data after successful download
      */
     void onItemsLoadComplete(ArrayList<TheVergeXmlParser.Entry> downloadedArticles) {
+        Log.i("UTD", "onLoadComplete: isUpToDate = true");
+        MainActivity.isUpToDate = true;
         // Update the adapter and notify data set changed
         RecyclerAdapter.articles.clear();
         for (int i = 0; i < downloadedArticles.size(); i++) {
             RecyclerAdapter.articles.add(downloadedArticles.get(i));
         }
+    }
+
+    public ActionBar getSupportActionBar() {
+        return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
 
@@ -280,7 +345,7 @@ public class ArticleListFragment extends Fragment {
      * activity. See: "http://developer.android.com/training/basics/fragments/communicating.html"
      */
     public interface OnFragmentInteractionListener {
-        public void onFragmentInteraction(int position);
+        void onFragmentInteraction(int position);
     }
 
     /**
@@ -308,18 +373,17 @@ public class ArticleListFragment extends Fragment {
         protected void onPostExecute(ArrayList<TheVergeXmlParser.Entry> articles) {
 
             if (articles != null && articles.size() > 0) {
-                if (getActivity().getSupportFragmentManager().findFragmentById(R.id.container).isVisible()) {
-                    loadToast.success();
-                    onItemsLoadComplete(articles);
-                    // Show new Fragment
-                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                    fragmentManager.beginTransaction()
-                            .replace(R.id.container, ArticleListFragment.newInstance(), "article_fragment").commit();
-                    refreshDisplay = false;
-                }
+                loadToast.success();
+                onItemsLoadComplete(articles);
+                // Show new Fragment
+                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                fragmentManager.beginTransaction()
+                        .replace(R.id.container, ArticleListFragment.newInstance(), "article_fragment").commit();
             } else { //
                 loadToast.error();
+                Crouton.makeText(getActivity(), "Connection timeout, please check connection and try again.", Style.ALERT).show();
                 Log.i(TAG, "onPostExecute - Articles null or empty (Most likely connection timeout)");
+                // TODO - show a new fragment with error message
 
             }
         }
@@ -329,8 +393,10 @@ public class ArticleListFragment extends Fragment {
      * This BroadcastReceiver intercepts the android.net.ConnectivityManager.CONNECTIVITY_ACTION,
      * which indicates a connection change. It checks whether the type is TYPE_WIFI.
      * If it is, it checks whether Wi-Fi is connected and sets the wifiConnected flag in the
-     * main activity accordingly.
+     * main activity accordingly. todo: Is there any use for this method? Maybe if first attempt at
+     * connection failed, then the user gets signal, update automatically
      */
+
     public class NetworkReceiver extends BroadcastReceiver {
 
         @Override
@@ -339,19 +405,21 @@ public class ArticleListFragment extends Fragment {
                     (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
+            // Crouton.makeText(getActivity(), "NETWORK RECIEVER: " + networkInfo, Style.ALERT).show();
+
             // Checks the network connection. Based on the result, decides
             // whether to refresh the display or keep the current display.
-            if (networkInfo != null) {
-                // If device has a network connection, sets refreshDisplay
-                // to true. This allows the display to be refreshed upon next attempt.
-                refreshDisplay = true;
+            //if (networkInfo != null) {
+            // If device has a network connection, sets refreshDisplay
+            // to true. This allows the display to be refreshed upon next attempt.
 
-                // Otherwise, the app can't download content due to no network
-                // connection (mobile or Wi-Fi). Sets refreshDisplay to false.
-            } else {
-                refreshDisplay = false;
-                Crouton.makeText(getActivity(), R.string.no_connection, Style.INFO).show();
-            }
+
+            // Otherwise, the app can't download content due to no network
+            // connection (mobile or Wi-Fi). Sets refreshDisplay to false.
+            //} else {
+            //    MainActivity.refreshDisplay = false;
+            //    Crouton.makeText(getActivity(), R.string.no_connection, Style.INFO).show();
+            //}
         }
     }
 
